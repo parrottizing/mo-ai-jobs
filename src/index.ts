@@ -1,14 +1,98 @@
 import { loadConfig } from "./config";
-import { loadState } from "./state";
+import { fetchJobDetails, type JobDetails } from "./details";
+import { classifyJobs } from "./classifier";
+import { collectNewJobs } from "./listings";
+import { loadState, saveState } from "./state";
+import { sendTelegramAlerts } from "./telegram";
 
 export * from "./details";
 export * from "./listings";
 export * from "./classifier";
 export * from "./telegram";
 
-export async function bootstrap(): Promise<void> {
+const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+export async function runOnce(): Promise<void> {
   const config = loadConfig();
-  await loadState(config.stateFilePath);
+  const state = await loadState(config.stateFilePath);
+  const startedAt = new Date();
+
+  log(`Run started (${startedAt.toISOString()})`);
+
+  const newJobs = await collectNewJobs({
+    listingsUrl: config.listingsUrl,
+    lastSeenJobId: state.lastSeenJobId,
+  });
+
+  log(`New jobs found: ${newJobs.length}`);
+
+  if (newJobs.length === 0) {
+    log("Run completed. Matches: 0.");
+    return;
+  }
+
+  const details: JobDetails[] = [];
+  for (const job of newJobs) {
+    details.push(await fetchJobDetails(job));
+  }
+
+  const matchResults = await classifyJobs(details, {
+    apiKey: config.googleApiKey,
+  });
+
+  const matchCount = matchResults.filter((result) => result.match).length;
+
+  const alertStats = await sendTelegramAlerts(matchResults, {
+    botToken: config.telegramBotToken,
+    chatId: config.telegramChatId,
+  });
+
+  await saveState(config.stateFilePath, {
+    lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
+  });
+
+  log(`Telegram alerts: sent ${alertStats.sent}, failed ${alertStats.failed}, skipped ${alertStats.skipped}.`);
+  log(`Run completed. New jobs: ${newJobs.length}. Matches: ${matchCount}.`);
+}
+
+export async function runDaily(): Promise<void> {
+  let running = false;
+
+  const runGuarded = async () => {
+    if (running) {
+      log("Skipping scheduled run because the previous run is still in progress.");
+      return;
+    }
+
+    running = true;
+    try {
+      await runOnce();
+    } catch (error) {
+      console.error(error);
+      log("Run failed. State not updated.");
+    } finally {
+      running = false;
+    }
+  };
+
+  await runGuarded();
+  setInterval(() => {
+    void runGuarded();
+  }, DAILY_INTERVAL_MS);
+}
+
+export async function bootstrap(): Promise<void> {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.schedule === "daily") {
+    await runDaily();
+    return;
+  }
+
+  if (args.schedule) {
+    throw new Error(`Unsupported schedule: ${args.schedule}`);
+  }
+
+  await runOnce();
 }
 
 if (require.main === module) {
@@ -16,4 +100,27 @@ if (require.main === module) {
     console.error(error);
     process.exit(1);
   });
+}
+
+function log(message: string): void {
+  console.log(`[${new Date().toISOString()}] ${message}`);
+}
+
+function parseArgs(argv: string[]): { schedule?: string } {
+  let schedule: string | undefined;
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--schedule" && argv[i + 1]) {
+      schedule = argv[i + 1];
+      i += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--schedule=")) {
+      schedule = arg.slice("--schedule=".length);
+    }
+  }
+
+  return { schedule };
 }

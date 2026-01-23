@@ -48,3 +48,4 @@ npm run dev
 - Job detail scraping uses headless Chrome/Chromium; set `CHROME_PATH` or `PUPPETEER_EXECUTABLE_PATH` if auto-detection fails
 - Gemini classification uses `generateContent` on the `v1beta` endpoint with model `gemma-3-27b-it` and JSON-only output
 - Telegram alerts use the `sendMessage` API and log failures per message instead of throwing
+- Agent orchestration lives in `src/index.ts` (`runOnce`, `--schedule daily`), with `LISTINGS_URL` as an optional override

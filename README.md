@@ -8,6 +8,43 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 [Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
 
+## Vibe Coder Job Agent
+
+This repo also contains a daily job agent that scans MoAIJobs, classifies roles, and sends Telegram alerts.
+
+### Environment
+
+Create a `.env` file with:
+
+```
+GOOGLE_API_KEY=...
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+LISTINGS_URL=https://moaijobs.com/jobs  # optional override
+```
+
+### Run once
+
+```bash
+npx tsc
+node dist/index.js
+```
+
+### Built-in daily schedule
+
+Keep the process running and execute every 24 hours:
+
+```bash
+npx tsc
+node dist/index.js --schedule daily
+```
+
+### Cron example
+
+```bash
+0 9 * * * cd /path/to/repo && npx tsc && node dist/index.js >> /tmp/vibe-coder-agent.log 2>&1
+```
+
 ## Prerequisites
 
 - One of the following AI coding tools installed and authenticated:

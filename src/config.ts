@@ -5,9 +5,11 @@ export type AppConfig = {
   telegramBotToken: string;
   telegramChatId: string;
   stateFilePath: string;
+  listingsUrl: string;
 };
 
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
+const DEFAULT_LISTINGS_URL = "https://moaijobs.com/jobs";
 
 export function loadConfig(stateFilePath = "state.json"): AppConfig {
   dotenv.config();
@@ -22,5 +24,6 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN as string,
     telegramChatId: process.env.TELEGRAM_CHAT_ID as string,
     stateFilePath,
+    listingsUrl: process.env.LISTINGS_URL?.trim() || DEFAULT_LISTINGS_URL,
   };
 }
