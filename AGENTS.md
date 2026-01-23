@@ -46,3 +46,4 @@ npm run dev
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
 - Job detail scraping uses headless Chrome/Chromium; set `CHROME_PATH` or `PUPPETEER_EXECUTABLE_PATH` if auto-detection fails
+- Gemini classification uses `generateContent` on the `v1beta` endpoint with model `gemma-3-27b-it` and JSON-only output
