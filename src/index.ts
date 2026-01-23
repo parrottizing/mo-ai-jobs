@@ -4,6 +4,7 @@ import { loadState } from "./state";
 export * from "./details";
 export * from "./listings";
 export * from "./classifier";
+export * from "./telegram";
 
 export async function bootstrap(): Promise<void> {
   const config = loadConfig();
