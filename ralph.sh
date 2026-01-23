@@ -1,12 +1,12 @@
 #!/bin/bash
 # Ralph Wiggum - Long-running AI agent loop
-# Usage: ./ralph.sh [--tool amp|claude] [max_iterations]
+# Usage: ./ralph.sh [--tool codex|claude] [max_iterations]
 
 set -e
 
 # Parse arguments
-TOOL="amp"  # Default to amp for backwards compatibility
-MAX_ITERATIONS=10
+TOOL="codex"
+MAX_ITERATIONS=5
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -29,8 +29,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate tool choice
-if [[ "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
-  echo "Error: Invalid tool '$TOOL'. Must be 'amp' or 'claude'."
+if [[ "$TOOL" != "codex" && "$TOOL" != "claude" ]]; then
+  echo "Error: Invalid tool '$TOOL'. Must be 'codex' or 'claude'."
   exit 1
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -88,8 +88,8 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   echo "==============================================================="
 
   # Run the selected tool with the ralph prompt
-  if [[ "$TOOL" == "amp" ]]; then
-    OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
+  if [[ "$TOOL" == "codex" ]]; then
+    OUTPUT=$(codex exec --full-auto - < "$SCRIPT_DIR/prompt.md" 2>&1 | tee /dev/stderr) || true
   else
     # Claude Code: use --dangerously-skip-permissions for autonomous operation, --print for output
     OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
