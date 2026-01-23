@@ -9,7 +9,7 @@ export type AppConfig = {
 };
 
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
-const DEFAULT_LISTINGS_URL = "https://moaijobs.com/jobs";
+const DEFAULT_LISTINGS_URL = "https://www.moaijobs.com/";
 
 export function loadConfig(stateFilePath = "state.json"): AppConfig {
   dotenv.config();
