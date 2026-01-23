@@ -1,5 +1,7 @@
 import { loadConfig } from "./config";
 import { loadState } from "./state";
+
+export * from "./details";
 export * from "./listings";
 
 export async function bootstrap(): Promise<void> {
