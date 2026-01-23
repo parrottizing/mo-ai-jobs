@@ -8,6 +8,7 @@ progress.txt
 
 # OS files
 .DS_Store
+node_modules/
 
 #Claude
 .claude/
