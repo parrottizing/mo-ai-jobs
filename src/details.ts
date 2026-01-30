@@ -145,11 +145,12 @@ function extractFromHtml(html: string): HtmlExtraction {
 
   const tags = extractTags(html);
 
-  const description =
+  const description = applyCutoff(
     extractSection(html, ["job-description", "description"]) ??
     extractTagBlock(html, "article") ??
     extractTagBlock(html, "main") ??
-    normalizeWhitespace(stripTags(html));
+    normalizeWhitespace(stripTags(html)),
+  );
 
   return {
     title,
@@ -158,6 +159,30 @@ function extractFromHtml(html: string): HtmlExtraction {
     tags,
     description: description ?? "",
   };
+}
+
+function applyCutoff(text: string | null): string | null {
+  if (!text) {
+    return null;
+  }
+
+  const cutoffs = [
+    "Similar Jobs",
+    "Browse all AI jobs",
+    "Looking for something different?",
+    "Post a Job",
+    "Share this job opportunity",
+  ];
+
+  let lowestIndex = text.length;
+  for (const marker of cutoffs) {
+    const index = text.indexOf(marker);
+    if (index !== -1 && index < lowestIndex) {
+      lowestIndex = index;
+    }
+  }
+
+  return text.slice(0, lowestIndex).trim();
 }
 
 function extractTagText(html: string, tag: string): string | null {
@@ -194,7 +219,7 @@ function extractByLabel(html: string, labels: string[]): string | null {
   for (const label of labels) {
     const regex = new RegExp(
       `<(?:dt|th|div|span|p)[^>]*>\\s*${label}\\s*<\\/(?:dt|th|div|span|p)>\\s*` +
-        `<(?:dd|td|div|span|p)[^>]*>([\\s\\S]*?)<\\/(?:dd|td|div|span|p)>`,
+      `<(?:dd|td|div|span|p)[^>]*>([\\s\\S]*?)<\\/(?:dd|td|div|span|p)>`,
       "i",
     );
     const match = regex.exec(html);
