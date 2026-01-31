@@ -38,6 +38,11 @@ export async function runOnce(): Promise<void> {
 
   const matchResults = await classifyJobs(details, {
     apiKey: config.googleApiKey,
+    rateLimit: {
+      tokensPerMinute: config.geminiTokensPerMinute,
+      safetyMargin: config.geminiTokenSafetyMargin,
+      minDelayMs: config.geminiMinDelayMs,
+    },
   });
 
   const matchCount = matchResults.filter((result) => result.match).length;

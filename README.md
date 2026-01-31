@@ -21,6 +21,9 @@ GOOGLE_API_KEY=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 LISTINGS_URL=https://www.moaijobs.com/  # optional override
+GEMINI_TOKENS_PER_MINUTE=15000         # optional, default 15000
+GEMINI_TOKEN_SAFETY_MARGIN=0.6         # optional, default 0.6
+GEMINI_MIN_DELAY_MS=0                  # optional, extra delay between calls
 ```
 
 ### Run once

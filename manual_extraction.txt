@@ -1,0 +1,70 @@
+MoAIJobs
+All Jobs
+5G AI Automation Intern
+Dell Technologies logo
+5G AI Automation Intern
+Posted 7 days ago
+
+Job Description
+Join us to do the best work of your career and make a profound social impact as a 5G AI Automation co-op on our 5G Systems team onsite in our Ottawa, Canada.
+
+What you’ll achieve
+As an undergraduate intern, you will be part of the team building Dell’s 5G fully automated test framework and accelerating our customer releases. As part of our 5G team, you will work with a cross functional global team to design, build and deliver production ready software that aligns with Dell standards and reputation.
+
+You will:
+
+Work in an agile environment delivering world class automation tools and solutions
+Get exposed to state of the art technologies and tooling stack used to deliver Dell’s Telco 5G product
+Develop and execute automated checkers and scans for our production code
+Work side by side with developers, product owner, program manager and key executives to plan ongoing feature development and product maintenance
+Assist in the definition of the integration, and AI automation strategies for the end-to-end 5G mobile network ensuring delivery of high-quality product releases.
+Take the first step towards your dream career
+Every Dell Technologies team member brings something unique to the table. Here’s what we are looking for with this role:
+Essential Requirements
+Prior exposure to Python-based Agentic AI Frameworks.
+Basic understanding of CI/CD pipelines and experience with at least one automation/orchestration tool (e.g., Jenkins, GitHub).
+Proficiency in Python scripting language; ability to write clean, reusable scripts.
+Familiarity with Linux command‑line environment.
+Strong problem‑solving skills, attention to detail, and ability to work independently as well as in a team.
+Desirable Requirements
+
+Knowledge of 5G/telecom architectures and related networking components.
+Exposure to container technologies (Docker) and orchestration platforms (Kubernetes) is a plus.
+Understanding of version‑control best practices (branching, pull‑request workflow).
+Experience with cloud platforms (AWS, Azure) and related CI/CD integrations.
+Compensation  
+
+Dell is committed to fair and equitable compensation practices. The hourly rate for this role is $20.00/hr-$30.60/hr.
+The Government of Canada only makes this program available to Canadian citizens. It is not open to international students.  
+
+Who we are
+
+We believe that each of us has the power to make an impact. That’s why we put our team members at the center of everything we do. If you’re looking for an opportunity to grow your career with some of the best minds and most advanced tech in the industry, we’re looking for you.
+
+Dell Technologies is a unique family of businesses that helps individuals and organizations transform how they work, live and play. Join us to build a future that works for everyone because Progress Takes All of Us.
+
+Dell Technologies is committed to the principle of equal employment opportunity for all employees and to providing employees with a work environment free of discrimination and harassment. Read the full Equal Employment Opportunity Policy here.
+
+
+ 
+
+Apply for this position
+Please mention that you found this job on MoAIJobs, this helps us grow. Thank you!
+
+Dell Technologies logo
+Dell Technologies
+136 jobs posted
+
+View all Dell Technologies jobs
+About the job
+Posted on
+Jan 23, 2026
+
+Apply before
+Feb 22, 2026
+
+Job type
+Full-time
+Salary Range
+$20 - $31/hr
+Category

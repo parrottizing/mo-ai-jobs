@@ -6,6 +6,9 @@ export type AppConfig = {
   telegramChatId: string;
   stateFilePath: string;
   listingsUrl: string;
+  geminiTokensPerMinute?: number;
+  geminiTokenSafetyMargin?: number;
+  geminiMinDelayMs?: number;
 };
 
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
@@ -25,5 +28,20 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     telegramChatId: process.env.TELEGRAM_CHAT_ID as string,
     stateFilePath,
     listingsUrl: process.env.LISTINGS_URL?.trim() || DEFAULT_LISTINGS_URL,
+    geminiTokensPerMinute: readNumber("GEMINI_TOKENS_PER_MINUTE"),
+    geminiTokenSafetyMargin: readNumber("GEMINI_TOKEN_SAFETY_MARGIN"),
+    geminiMinDelayMs: readNumber("GEMINI_MIN_DELAY_MS"),
   };
+}
+
+function readNumber(key: string): number | undefined {
+  const value = process.env[key];
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Invalid numeric env var ${key}: ${value}`);
+  }
+  return parsed;
 }
