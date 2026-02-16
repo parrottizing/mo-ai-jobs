@@ -32,7 +32,9 @@ export async function runOnce(): Promise<void> {
   }
 
   const details: JobDetails[] = [];
-  for (const job of newJobs) {
+  for (let i = 0; i < newJobs.length; i++) {
+    const job = newJobs[i];
+    log(`Fetching job details (${i + 1}/${newJobs.length}): ${job.title}`);
     details.push(await fetchJobDetails(job));
   }
 

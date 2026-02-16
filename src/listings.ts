@@ -133,6 +133,19 @@ function findNextPageUrl(html: string, baseUrl: string): string | null {
     return resolveUrl(baseUrl, anchorRelMatch[3]);
   }
 
+  // Try to find next page by URL pattern /page/N
+  const currentPageMatch = /\/page\/(\d+)/.exec(baseUrl);
+  const currentPage = currentPageMatch ? parseInt(currentPageMatch[1], 10) : 1;
+  const nextPage = currentPage + 1;
+  const nextPagePattern = new RegExp(`href\\s*=\\s*(["'])[^"']*\\/page\\/${nextPage}[^"']*\\1`, "i");
+  const nextPageUrlMatch = nextPagePattern.exec(html);
+  if (nextPageUrlMatch) {
+    const fullMatch = /<a\s+[^>]*href\s*=\s*(["'])([^"']*\/page\/\d+[^"']*)\1[^>]*>/i.exec(html);
+    if (fullMatch?.[2]?.includes(`/page/${nextPage}`)) {
+      return resolveUrl(baseUrl, fullMatch[2]);
+    }
+  }
+
   const anchorRegex = /<a\s+[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
   let match: RegExpExecArray | null;
   while ((match = anchorRegex.exec(html))) {
@@ -144,7 +157,14 @@ function findNextPageUrl(html: string, baseUrl: string): string | null {
     }
 
     const lowerText = text.toLowerCase();
-    if (lowerText === "next" || lowerText.includes("next page") || lowerText.includes("older")) {
+    // Check for common "next" patterns including MoAIJobs-specific ones
+    if (
+      lowerText === "next" ||
+      lowerText === "»" ||
+      lowerText.includes("next page") ||
+      lowerText.includes("older") ||
+      lowerText.includes("view more")
+    ) {
       return resolveUrl(baseUrl, href);
     }
   }
