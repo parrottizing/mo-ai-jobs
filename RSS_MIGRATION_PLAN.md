@@ -12,10 +12,10 @@ Generated: 2026-02-19
 - [x] Backup `state.json` and document the current state schema in `migration/phase0/state-backups/` and `migration/phase0/state-schema-v0.md`.
 
 ## Phase 1: Config and Data Contracts
-- [ ] Add `RSS_FEED_URL` config with default `https://www.moaijobs.com/ai-jobs.rss`.
-- [ ] Define feed-level model types (for example: `FeedJob` with `id`, `title`, `detailUrl`, `pubDate`, `company`, `location`, `tags`, `descriptionHtml`, `descriptionText`).
-- [ ] Define enriched model types (for example: `applyUrl`, `detailFetchStatus`, `enrichmentError`).
-- [ ] Add explicit limits in config (max items per run, description char cap for classifier input).
+- [x] Add `RSS_FEED_URL` config with default `https://www.moaijobs.com/ai-jobs.rss`.
+- [x] Define feed-level model types (for example: `FeedJob` with `id`, `title`, `detailUrl`, `pubDate`, `company`, `location`, `tags`, `descriptionHtml`, `descriptionText`).
+- [x] Define enriched model types (for example: `applyUrl`, `detailFetchStatus`, `enrichmentError`).
+- [x] Add explicit limits in config (max items per run, description char cap for classifier input).
 
 ## Phase 2: State Schema Upgrade
 - [ ] Introduce `schemaVersion` in persisted state.

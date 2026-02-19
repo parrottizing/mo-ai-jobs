@@ -18,6 +18,7 @@ Daily TypeScript agent that scans MoAIJobs for new listings, classifies each rol
 - `src/config.ts`: Environment config loading and validation
 - `src/state.ts`: Local state persistence (`lastSeenJobId`)
 - `src/listings.ts`: Listings crawl and pagination logic
+- `src/rss-models.ts`: RSS feed-level and enrichment data contracts
 - `src/details.ts`: Headless-browser job detail extraction
 - `src/classifier.ts`: Gemini classification, rate-limit handling, retries
 - `src/telegram.ts`: Telegram alert delivery
@@ -39,10 +40,15 @@ GOOGLE_API_KEY=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 LISTINGS_URL=https://www.moaijobs.com/
+RSS_FEED_URL=https://www.moaijobs.com/ai-jobs.rss
+RSS_MAX_ITEMS_PER_RUN=100
+CLASSIFIER_DESCRIPTION_CHAR_CAP=4000
 GEMINI_TOKENS_PER_MINUTE=15000
 GEMINI_TOKEN_SAFETY_MARGIN=0.6
 GEMINI_MIN_DELAY_MS=0
 ```
+
+`RSS_FEED_URL`, `RSS_MAX_ITEMS_PER_RUN`, and `CLASSIFIER_DESCRIPTION_CHAR_CAP` are migration-forward settings for the RSS-first pipeline.
 
 ## Install
 

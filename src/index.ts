@@ -7,6 +7,7 @@ import { sendTelegramAlerts, type TelegramAlertStats } from "./telegram";
 
 export * from "./details";
 export * from "./listings";
+export * from "./rss-models";
 export * from "./classifier";
 export * from "./telegram";
 
