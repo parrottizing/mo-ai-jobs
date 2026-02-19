@@ -1,7 +1,7 @@
 import { loadConfig } from "./config";
 import { fetchJobDetails, type JobDetails } from "./details";
 import { classifyJobs } from "./classifier";
-import { collectNewJobs } from "./listings";
+import { collectNewFeedJobs } from "./listings";
 import { loadState, saveState } from "./state";
 import { sendTelegramAlerts, type TelegramAlertStats } from "./telegram";
 
@@ -39,10 +39,17 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
 
   log(`Run started (${startedAt.toISOString()})`);
 
-  const newJobs = await collectNewJobs({
-    listingsUrl: config.listingsUrl,
-    lastSeenJobId: state.lastSeenJobId,
+  const newFeedJobs = await collectNewFeedJobs({
+    rssFeedUrl: config.rssFeedUrl,
+    latestSeenPubDate: state.latestSeenPubDate,
+    seenIds: state.seenIds,
+    maxItemsPerRun: config.maxFeedItemsPerRun,
   });
+  const newJobs = newFeedJobs.map((job) => ({
+    id: job.id,
+    title: job.title,
+    url: job.detailUrl,
+  }));
 
   log(`New jobs found: ${newJobs.length}`);
 
@@ -82,6 +89,8 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   await saveState(config.stateFilePath, {
     ...state,
     lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
+    latestSeenPubDate: getLatestSeenPubDate(state.latestSeenPubDate, newFeedJobs),
+    seenIds: mergeSeenIds(state.seenIds, newFeedJobs.map((job) => job.id)),
   });
 
   const summary = buildRunSummary(startedAt, new Date(), newJobs.length, matchCount, alertStats);
@@ -178,4 +187,40 @@ function buildRunSummary(
     telegramFailedCount: alertStats.failed,
     telegramSkippedCount: alertStats.skipped,
   };
+}
+
+function getLatestSeenPubDate(currentValue: string | null, jobs: Array<{ pubDate: string | null }>): string | null {
+  let latestTimestamp = parseTimestamp(currentValue);
+
+  for (const job of jobs) {
+    const timestamp = parseTimestamp(job.pubDate);
+    if (timestamp !== null && (latestTimestamp === null || timestamp > latestTimestamp)) {
+      latestTimestamp = timestamp;
+    }
+  }
+
+  return latestTimestamp === null ? null : new Date(latestTimestamp).toISOString();
+}
+
+function mergeSeenIds(existingIds: string[], newIds: string[]): string[] {
+  const newIdSet = new Set(newIds.map((id) => id.trim()).filter((id) => id.length > 0));
+  const merged = existingIds.filter((id) => !newIdSet.has(id.trim()));
+
+  for (const id of newIds) {
+    const trimmed = id.trim();
+    if (!trimmed) {
+      continue;
+    }
+    merged.push(trimmed);
+  }
+
+  return merged;
+}
+
+function parseTimestamp(value: string | null): number | null {
+  if (!value) {
+    return null;
+  }
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
 }

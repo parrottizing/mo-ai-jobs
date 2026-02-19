@@ -25,12 +25,12 @@ Generated: 2026-02-19
 - [x] Keep backward compatibility so existing installs do not break.
 
 ## Phase 3: RSS Ingestion and Normalization
-- [ ] Implement RSS reader in `src/listings.ts` that consumes feed items newest-first.
-- [ ] Parse items with a tolerant approach to malformed namespace tags.
-- [ ] Normalize and clean description HTML to plain text for classification.
-- [ ] Use `guid` as primary job ID, fallback to link slug.
-- [ ] Apply stop conditions using `latestSeenPubDate` and `seenIds`.
-- [ ] Deduplicate items within the same run.
+- [x] Implement RSS reader in `src/listings.ts` that consumes feed items newest-first.
+- [x] Parse items with a tolerant approach to malformed namespace tags.
+- [x] Normalize and clean description HTML to plain text for classification.
+- [x] Use `guid` as primary job ID, fallback to link slug.
+- [x] Apply stop conditions using `latestSeenPubDate` and `seenIds`.
+- [x] Deduplicate items within the same run.
 
 ## Phase 4: Classification Pipeline (RSS Data First)
 - [ ] Build classifier input from RSS fields only (`title`, `company`, `location`, `tags`, cleaned description).

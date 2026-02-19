@@ -1,206 +1,389 @@
+import type { FeedJob } from "./rss-models";
+
 export type JobListing = {
   id: string;
   title: string;
   url: string;
 };
 
-export type ListingsPage = {
-  jobs: JobListing[];
-  nextPageUrl: string | null;
-};
-
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 type CollectOptions = {
-  listingsUrl: string;
-  lastSeenJobId?: string | null;
-  maxPages?: number;
+  rssFeedUrl: string;
+  latestSeenPubDate?: string | null;
+  seenIds?: string[];
+  maxItemsPerRun?: number;
   fetcher?: Fetcher;
 };
 
-const JOB_PATH_HINTS = [/\/jobs?\//i, /\/role\//i, /\/position\//i, /\/listing\//i];
+const DEFAULT_MAX_ITEMS_PER_RUN = 100;
 
 export async function collectNewJobs(options: CollectOptions): Promise<JobListing[]> {
+  const feedJobs = await collectNewFeedJobs(options);
+  return feedJobs.map((job) => ({
+    id: job.id,
+    title: job.title,
+    url: job.detailUrl,
+  }));
+}
+
+export async function collectNewFeedJobs(options: CollectOptions): Promise<FeedJob[]> {
   const {
-    listingsUrl,
-    lastSeenJobId = null,
-    maxPages = 20,
+    rssFeedUrl,
+    latestSeenPubDate = null,
+    seenIds = [],
+    maxItemsPerRun = DEFAULT_MAX_ITEMS_PER_RUN,
     fetcher = fetch,
   } = options;
 
-  const jobs: JobListing[] = [];
-  const seenIds = new Set<string>();
-  const visited = new Set<string>();
+  const response = await fetcher(rssFeedUrl, {
+    headers: {
+      "User-Agent": "vibe-coder-job-agent/0.1",
+      Accept: "application/rss+xml, application/xml, text/xml, */*",
+    },
+  });
 
-  let nextUrl: string | null = listingsUrl;
-  let pages = 0;
-  let foundLastSeen = false;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: ${response.status} ${response.statusText}`);
+  }
 
-  while (nextUrl && pages < maxPages && !foundLastSeen) {
-    if (visited.has(nextUrl)) {
+  const xml = await response.text();
+  const feedItems = parseFeedItems(xml, rssFeedUrl);
+  return selectNewFeedItems(feedItems, {
+    latestSeenPubDate,
+    seenIds,
+    maxItemsPerRun,
+  });
+}
+
+export function parseFeedItems(xml: string, feedUrl: string): FeedJob[] {
+  const itemBlocks = extractItemBlocks(xml);
+  const parsedItems: FeedJob[] = [];
+
+  for (const block of itemBlocks) {
+    const item = parseFeedItem(block, feedUrl);
+    if (item) {
+      parsedItems.push(item);
+    }
+  }
+
+  return sortNewestFirst(parsedItems);
+}
+
+type SelectionOptions = {
+  latestSeenPubDate: string | null;
+  seenIds: string[];
+  maxItemsPerRun: number;
+};
+
+function selectNewFeedItems(feedItems: FeedJob[], options: SelectionOptions): FeedJob[] {
+  const cursorTimestamp = toTimestamp(options.latestSeenPubDate);
+  const historicalSeen = new Set(options.seenIds.map((id) => id.trim()).filter((id) => id.length > 0));
+  const seenThisRun = new Set<string>();
+  const selected: FeedJob[] = [];
+
+  for (const item of feedItems) {
+    if (selected.length >= options.maxItemsPerRun) {
       break;
     }
-    visited.add(nextUrl);
-    pages += 1;
 
-    const response = await fetcher(nextUrl, {
-      headers: {
-        "User-Agent": "vibe-coder-job-agent/0.1",
-      },
-    });
+    if (seenThisRun.has(item.id)) {
+      continue;
+    }
+    seenThisRun.add(item.id);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch listings page ${nextUrl}: ${response.status} ${response.statusText}`);
+    const itemTimestamp = toTimestamp(item.pubDate);
+    if (cursorTimestamp !== null && itemTimestamp !== null && itemTimestamp < cursorTimestamp) {
+      break;
     }
 
-    const html = await response.text();
-    const page = parseListingsPage(html, nextUrl);
-
-    for (const job of page.jobs) {
-      if (lastSeenJobId && job.id === lastSeenJobId) {
-        foundLastSeen = true;
-        break;
-      }
-
-      if (!seenIds.has(job.id)) {
-        jobs.push(job);
-        seenIds.add(job.id);
-      }
+    if (historicalSeen.has(item.id)) {
+      continue;
     }
 
-    if (!foundLastSeen) {
-      nextUrl = page.nextPageUrl;
-    }
+    selected.push(item);
   }
 
-  return jobs;
+  return selected;
 }
 
-export function parseListingsPage(html: string, baseUrl: string): ListingsPage {
-  const jobs = parseJobListings(html, baseUrl);
-  const nextPageUrl = findNextPageUrl(html, baseUrl);
-
-  return { jobs, nextPageUrl };
-}
-
-function parseJobListings(html: string, baseUrl: string): JobListing[] {
-  const jobListings: JobListing[] = [];
-  const seen = new Set<string>();
-  const anchorRegex = /<a\s+([^>]*?)href\s*=\s*(["'])(.*?)\2([^>]*?)>([\s\S]*?)<\/a>/gi;
+function extractItemBlocks(xml: string): string[] {
+  const itemRegex = /<item\b[^>]*>([\s\S]*?)<\/item>/gi;
+  const blocks: string[] = [];
 
   let match: RegExpExecArray | null;
-  while ((match = anchorRegex.exec(html))) {
-    const beforeAttrs = match[1] ?? "";
-    const href = match[3]?.trim();
-    const afterAttrs = match[4] ?? "";
-    const inner = match[5] ?? "";
-
-    if (!href || !hrefIsJobListing(href)) {
-      continue;
+  while ((match = itemRegex.exec(xml))) {
+    if (match[1]) {
+      blocks.push(match[1]);
     }
-
-    const url = resolveUrl(baseUrl, href);
-    const title = normalizeWhitespace(stripTags(inner));
-    const attrs = `${beforeAttrs} ${afterAttrs}`;
-    const dataId = extractDataId(attrs);
-    const id = dataId ?? extractIdFromUrl(url);
-
-    if (!id || !title || seen.has(id)) {
-      continue;
-    }
-
-    seen.add(id);
-    jobListings.push({ id, title, url });
   }
 
-  return jobListings;
+  return blocks;
 }
 
-function hrefIsJobListing(href: string): boolean {
-  return JOB_PATH_HINTS.some((pattern) => pattern.test(href));
+function parseFeedItem(block: string, feedUrl: string): FeedJob | null {
+  const guid = normalizeTagText(readTagContent(block, ["guid"]));
+  const link = normalizeTagText(readTagContent(block, ["link"]));
+  const detailUrlRaw = link ?? guid;
+
+  if (!detailUrlRaw) {
+    return null;
+  }
+
+  const detailUrl = resolveUrl(feedUrl, detailUrlRaw);
+  const id = guid ?? extractIdFromUrl(detailUrl);
+  if (!id) {
+    return null;
+  }
+
+  const title =
+    normalizeTagText(readTagContent(block, ["title"])) ??
+    extractTitleFromDescription(readTagContent(block, ["description"])) ??
+    id;
+
+  const pubDate = normalizePubDate(readTagContent(block, ["pubDate", "dc:date"]));
+  const descriptionHtml = normalizeDescriptionHtml(readTagContent(block, ["description", "content:encoded"]));
+  const descriptionText = htmlToPlainText(descriptionHtml);
+
+  const company =
+    normalizeTagText(readTagContent(block, ["job:company", "company"], true)) ??
+    extractLabeledValue(descriptionText, "Company");
+
+  const location =
+    normalizeTagText(readTagContent(block, ["job:location", "location"], true)) ??
+    extractLabeledValue(descriptionText, "Location");
+
+  const tags = extractTags(descriptionHtml, descriptionText);
+
+  return {
+    id,
+    title,
+    detailUrl,
+    pubDate,
+    company,
+    location,
+    tags,
+    descriptionHtml,
+    descriptionText,
+  };
 }
 
-function findNextPageUrl(html: string, baseUrl: string): string | null {
-  const linkRelMatch = /<link\s+[^>]*rel\s*=\s*(["'])next\1[^>]*href\s*=\s*(["'])(.*?)\2[^>]*>/i.exec(html);
-  if (linkRelMatch?.[3]) {
-    return resolveUrl(baseUrl, linkRelMatch[3]);
-  }
-
-  const anchorRelMatch = /<a\s+[^>]*rel\s*=\s*(["'])next\1[^>]*href\s*=\s*(["'])(.*?)\2[^>]*>([\s\S]*?)<\/a>/i.exec(
-    html,
-  );
-  if (anchorRelMatch?.[3]) {
-    return resolveUrl(baseUrl, anchorRelMatch[3]);
-  }
-
-  // Try to find next page by URL pattern /page/N
-  const currentPageMatch = /\/page\/(\d+)/.exec(baseUrl);
-  const currentPage = currentPageMatch ? parseInt(currentPageMatch[1], 10) : 1;
-  const nextPage = currentPage + 1;
-  const nextPagePattern = new RegExp(`href\\s*=\\s*(["'])[^"']*\\/page\\/${nextPage}[^"']*\\1`, "i");
-  const nextPageUrlMatch = nextPagePattern.exec(html);
-  if (nextPageUrlMatch) {
-    const fullMatch = /<a\s+[^>]*href\s*=\s*(["'])([^"']*\/page\/\d+[^"']*)\1[^>]*>/i.exec(html);
-    if (fullMatch?.[2]?.includes(`/page/${nextPage}`)) {
-      return resolveUrl(baseUrl, fullMatch[2]);
-    }
-  }
-
-  const anchorRegex = /<a\s+[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = anchorRegex.exec(html))) {
-    const href = match[2]?.trim();
-    const text = normalizeWhitespace(stripTags(match[3] ?? ""));
-
-    if (!href || !text) {
-      continue;
+function readTagContent(block: string, tagNames: string[], includeLocalNameFallback = false): string | null {
+  for (const tagName of tagNames) {
+    const directMatch = matchTagContent(block, tagName, false);
+    if (directMatch) {
+      return directMatch;
     }
 
-    const lowerText = text.toLowerCase();
-    // Check for common "next" patterns including MoAIJobs-specific ones
-    if (
-      lowerText === "next" ||
-      lowerText === "»" ||
-      lowerText.includes("next page") ||
-      lowerText.includes("older") ||
-      lowerText.includes("view more")
-    ) {
-      return resolveUrl(baseUrl, href);
+    if (includeLocalNameFallback && !tagName.includes(":")) {
+      const fallbackMatch = matchTagContent(block, tagName, true);
+      if (fallbackMatch) {
+        return fallbackMatch;
+      }
     }
   }
 
   return null;
+}
+
+function matchTagContent(block: string, tagName: string, allowAnyPrefix: boolean): string | null {
+  const prefixPattern = allowAnyPrefix ? "(?:[\\w.-]+:)?" : "";
+  const escapedTagName = escapeRegExp(tagName);
+  const pattern = `<${prefixPattern}${escapedTagName}(?:\\s[^>]*)?>([\\s\\S]*?)<\/${prefixPattern}${escapedTagName}>`;
+  const regex = new RegExp(pattern, "i");
+  const match = regex.exec(block);
+  return match?.[1] ?? null;
+}
+
+function normalizeDescriptionHtml(rawDescription: string | null): string {
+  if (!rawDescription) {
+    return "";
+  }
+
+  const withoutCdataMarkers = stripCdataMarkers(rawDescription);
+  const decoded = decodeHtmlEntitiesDeep(withoutCdataMarkers, 3);
+  const sanitized = decoded
+    .replace(/<!\[CDATA\[/gi, "")
+    .replace(/\]\]>/g, "")
+    .replace(/\s*\]\]+\s*$/g, "");
+  const trimmed = sanitized.trim().replace(/^>+\s*/, "").replace(/\s*<\/+description>\s*$/i, "");
+  return trimmed;
+}
+
+function stripCdataMarkers(value: string): string {
+  return value.replace(/<!\[CDATA\[/gi, "").replace(/\]\]>/g, "");
+}
+
+function htmlToPlainText(html: string): string {
+  if (!html) {
+    return "";
+  }
+
+  const withoutScripts = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ");
+
+  const withSpacing = withoutScripts
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(?:p|div|li|h[1-6]|tr|section|article|ul|ol)>/gi, "\n")
+    .replace(/<(?:li)\b[^>]*>/gi, "- ");
+
+  const withoutTags = withSpacing.replace(/<[^>]*>/g, " ");
+  const decoded = decodeHtmlEntitiesDeep(withoutTags, 2);
+  return normalizeWhitespace(decoded);
+}
+
+function extractTags(descriptionHtml: string, descriptionText: string): string[] {
+  const parsedFromHtml = parseTagsFromText(htmlToPlainText(descriptionHtml));
+  if (parsedFromHtml.length > 0) {
+    return parsedFromHtml;
+  }
+
+  return parseTagsFromText(descriptionText);
+}
+
+function parseTagsFromText(text: string): string[] {
+  if (!text) {
+    return [];
+  }
+
+  const jsonLikeMatch = /Tags\s*:\s*(\[[^\]]*\])/i.exec(text);
+  if (jsonLikeMatch?.[1]) {
+    const tags = parseStructuredTags(jsonLikeMatch[1]);
+    if (tags.length > 0) {
+      return tags;
+    }
+  }
+
+  const plainMatch = /Tags\s*:\s*([^\n\r]+)/i.exec(text);
+  if (!plainMatch?.[1]) {
+    return [];
+  }
+
+  return plainMatch[1]
+    .split(",")
+    .map((tag) => tag.replace(/["'[\]]/g, "").trim())
+    .filter((tag) => tag.length > 0);
+}
+
+function parseStructuredTags(value: string): string[] {
+  const normalizedJson = value.replace(/'/g, '"');
+
+  try {
+    const parsed = JSON.parse(normalizedJson) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const unique = new Set<string>();
+    const tags: string[] = [];
+
+    for (const entry of parsed) {
+      if (typeof entry !== "string") {
+        continue;
+      }
+      const normalized = entry.trim();
+      if (!normalized || unique.has(normalized)) {
+        continue;
+      }
+      unique.add(normalized);
+      tags.push(normalized);
+    }
+
+    return tags;
+  } catch {
+    return [];
+  }
+}
+
+function extractTitleFromDescription(rawDescription: string | null): string | null {
+  if (!rawDescription) {
+    return null;
+  }
+
+  const descriptionHtml = normalizeDescriptionHtml(rawDescription);
+  const titleMatch = /<h2\b[^>]*>([\s\S]*?)<\/h2>/i.exec(descriptionHtml);
+  if (!titleMatch?.[1]) {
+    return null;
+  }
+
+  return normalizeWhitespace(decodeHtmlEntitiesDeep(stripTags(titleMatch[1]), 2));
+}
+
+function extractLabeledValue(descriptionText: string, label: string): string | null {
+  if (!descriptionText) {
+    return null;
+  }
+
+  const escapedLabel = escapeRegExp(label);
+  const regex = new RegExp(
+    `${escapedLabel}\\s*:\\s*(.+?)(?=\\s(?:Company|Location|Tags|Job Description)\\s*:|$)`,
+    "i",
+  );
+  const match = regex.exec(descriptionText);
+  if (!match?.[1]) {
+    return null;
+  }
+
+  const value = normalizeWhitespace(match[1]);
+  return value || null;
+}
+
+function normalizeTagText(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const decoded = decodeHtmlEntitiesDeep(stripCdataMarkers(value), 2);
+  const normalized = normalizeWhitespace(stripTags(decoded));
+  return normalized || null;
+}
+
+function normalizePubDate(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalizedValue = normalizeWhitespace(decodeHtmlEntitiesDeep(stripCdataMarkers(value), 2));
+  const timestamp = Date.parse(normalizedValue);
+  if (!Number.isFinite(timestamp)) {
+    return null;
+  }
+
+  return new Date(timestamp).toISOString();
+}
+
+function sortNewestFirst(items: FeedJob[]): FeedJob[] {
+  return items
+    .map((item, index) => ({
+      item,
+      index,
+      timestamp: toTimestamp(item.pubDate),
+    }))
+    .sort((a, b) => {
+      if (a.timestamp !== null && b.timestamp !== null && a.timestamp !== b.timestamp) {
+        return b.timestamp - a.timestamp;
+      }
+
+      if (a.timestamp !== null && b.timestamp === null) {
+        return -1;
+      }
+
+      if (a.timestamp === null && b.timestamp !== null) {
+        return 1;
+      }
+
+      return a.index - b.index;
+    })
+    .map((entry) => entry.item);
 }
 
 function resolveUrl(baseUrl: string, href: string): string {
-  return new URL(href, baseUrl).toString();
-}
-
-function stripTags(text: string): string {
-  return text.replace(/<[^>]*>/g, " ");
-}
-
-function normalizeWhitespace(text: string): string {
-  return decodeHtmlEntities(text).replace(/\s+/g, " ").trim();
-}
-
-function decodeHtmlEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'");
-}
-
-function extractDataId(attrs: string): string | null {
-  const dataIdMatch = /data-(?:job-)?id\s*=\s*(["'])(.*?)\1/i.exec(attrs);
-  if (dataIdMatch?.[2]) {
-    return normalizeWhitespace(dataIdMatch[2]);
+  try {
+    return new URL(href, baseUrl).toString();
+  } catch {
+    return href;
   }
-
-  return null;
 }
 
 function extractIdFromUrl(url: string): string {
@@ -212,4 +395,60 @@ function extractIdFromUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+function toTimestamp(value: string | null | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) {
+    return null;
+  }
+
+  return timestamp;
+}
+
+function stripTags(text: string): string {
+  return text.replace(/<[^>]*>/g, " ");
+}
+
+function normalizeWhitespace(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function decodeHtmlEntitiesDeep(value: string, maxPasses: number): string {
+  let decoded = value;
+  for (let i = 0; i < maxPasses; i += 1) {
+    const next = decodeHtmlEntities(decoded);
+    if (next === decoded) {
+      break;
+    }
+    decoded = next;
+  }
+  return decoded;
+}
+
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#(\d+);/g, (_, decimal: string) => {
+      const codePoint = Number.parseInt(decimal, 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : _;
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, hexadecimal: string) => {
+      const codePoint = Number.parseInt(hexadecimal, 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : _;
+    })
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/gi, "'");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
