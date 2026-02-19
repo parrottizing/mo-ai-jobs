@@ -18,11 +18,11 @@ Generated: 2026-02-19
 - [x] Add explicit limits in config (max items per run, description char cap for classifier input).
 
 ## Phase 2: State Schema Upgrade
-- [ ] Introduce `schemaVersion` in persisted state.
-- [ ] Add `latestSeenPubDate` cursor field.
-- [ ] Add bounded dedupe collections (`seenIds`, `notifiedIds`).
-- [ ] Implement migration logic from existing state shape to the new schema.
-- [ ] Keep backward compatibility so existing installs do not break.
+- [x] Introduce `schemaVersion` in persisted state.
+- [x] Add `latestSeenPubDate` cursor field.
+- [x] Add bounded dedupe collections (`seenIds`, `notifiedIds`).
+- [x] Implement migration logic from existing state shape to the new schema.
+- [x] Keep backward compatibility so existing installs do not break.
 
 ## Phase 3: RSS Ingestion and Normalization
 - [ ] Implement RSS reader in `src/listings.ts` that consumes feed items newest-first.

@@ -80,6 +80,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   });
 
   await saveState(config.stateFilePath, {
+    ...state,
     lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
   });
 
