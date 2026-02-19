@@ -1,13 +1,18 @@
 import { loadConfig } from "./config";
 import { classifyJobs, type JobMatchResult } from "./classifier";
+import { enrichFeedJob } from "./details";
 import { collectNewFeedJobs } from "./listings";
-import type { FeedJob } from "./rss-models";
+import type { EnrichedFeedJob, FeedJob } from "./rss-models";
 import {
   loadState,
   saveState,
   type ClassificationDecisionRecord,
 } from "./state";
-import { sendTelegramAlerts, type TelegramAlertStats } from "./telegram";
+import {
+  sendTelegramAlerts,
+  type TelegramAlertResult,
+  type TelegramAlertStats,
+} from "./telegram";
 
 export * from "./details";
 export * from "./listings";
@@ -76,8 +81,16 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   });
 
   const matchCount = matchResults.filter((result) => result.match).length;
+  const enrichedAlertResults = await enrichPositiveMatches(matchResults, newJobs, {
+    allowHeadlessFallback: config.detailEnrichmentHeadlessFallbackEnabled,
+  });
+  const enrichmentFailureCount = countEnrichmentFailures(enrichedAlertResults);
 
-  const alertStats = await sendTelegramAlerts(matchResults, {
+  if (enrichmentFailureCount > 0) {
+    log(`Detail enrichment fallback used for ${enrichmentFailureCount} matched job(s).`);
+  }
+
+  const alertStats = await sendTelegramAlerts(enrichedAlertResults, {
     botToken: config.telegramBotToken,
     chatId: config.telegramChatId,
   });
@@ -239,6 +252,109 @@ function dedupeFeedJobsById(jobs: FeedJob[]): FeedJob[] {
   }
 
   return deduped;
+}
+
+async function enrichPositiveMatches(
+  results: JobMatchResult[],
+  feedJobs: FeedJob[],
+  options: {
+    allowHeadlessFallback: boolean;
+  },
+): Promise<TelegramAlertResult[]> {
+  const jobsById = new Map(feedJobs.map((job) => [job.id, job]));
+  const enrichedResults: TelegramAlertResult[] = [];
+
+  for (const result of results) {
+    if (!result.match) {
+      enrichedResults.push(result);
+      continue;
+    }
+
+    const sourceJob = jobsById.get(result.job.id);
+    if (!sourceJob) {
+      enrichedResults.push({
+        ...result,
+        enrichedJob: buildFallbackFromClassifierResult(
+          result,
+          "Could not find the matching RSS item during enrichment.",
+        ),
+      });
+      continue;
+    }
+
+    try {
+      const enrichedJob = await enrichFeedJob(sourceJob, {
+        allowHeadlessFallback: options.allowHeadlessFallback,
+      });
+
+      enrichedResults.push({
+        ...result,
+        enrichedJob,
+      });
+    } catch (error) {
+      enrichedResults.push({
+        ...result,
+        enrichedJob: buildFailedEnrichedFeedJob(
+          sourceJob,
+          `Unexpected enrichment error: ${formatError(error)}`,
+        ),
+      });
+    }
+  }
+
+  return enrichedResults;
+}
+
+function countEnrichmentFailures(results: TelegramAlertResult[]): number {
+  let failures = 0;
+
+  for (const result of results) {
+    if (!result.match) {
+      continue;
+    }
+
+    if (result.enrichedJob?.detailFetchStatus === "failed") {
+      failures += 1;
+    }
+  }
+
+  return failures;
+}
+
+function buildFailedEnrichedFeedJob(job: FeedJob, errorMessage: string): EnrichedFeedJob {
+  return {
+    ...job,
+    applyUrl: job.detailUrl,
+    detailFetchStatus: "failed",
+    enrichmentError: errorMessage,
+  };
+}
+
+function buildFallbackFromClassifierResult(
+  result: JobMatchResult,
+  errorMessage: string,
+): EnrichedFeedJob {
+  return {
+    id: result.job.id,
+    title: result.job.title,
+    detailUrl: result.job.detailUrl,
+    pubDate: null,
+    company: result.job.company,
+    location: result.job.location,
+    tags: result.job.tags,
+    descriptionHtml: "",
+    descriptionText: result.job.descriptionText,
+    applyUrl: result.job.detailUrl,
+    detailFetchStatus: "failed",
+    enrichmentError: errorMessage,
+  };
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return String(error);
 }
 
 function mergeClassificationDecisions(

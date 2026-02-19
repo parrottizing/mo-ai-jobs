@@ -9,6 +9,7 @@ export type AppConfig = {
   rssFeedUrl: string;
   maxFeedItemsPerRun: number;
   classifierDescriptionCharCap: number;
+  detailEnrichmentHeadlessFallbackEnabled: boolean;
   geminiTokensPerMinute?: number;
   geminiTokenSafetyMargin?: number;
   geminiMinDelayMs?: number;
@@ -19,6 +20,7 @@ const DEFAULT_LISTINGS_URL = "https://www.moaijobs.com/";
 const DEFAULT_RSS_FEED_URL = "https://www.moaijobs.com/ai-jobs.rss";
 const DEFAULT_MAX_FEED_ITEMS_PER_RUN = 100;
 const DEFAULT_CLASSIFIER_DESCRIPTION_CHAR_CAP = 4_000;
+const DEFAULT_DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED = false;
 
 export function loadConfig(stateFilePath = "state.json"): AppConfig {
   dotenv.config();
@@ -39,6 +41,10 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     classifierDescriptionCharCap: readPositiveInteger(
       "CLASSIFIER_DESCRIPTION_CHAR_CAP",
       DEFAULT_CLASSIFIER_DESCRIPTION_CHAR_CAP,
+    ),
+    detailEnrichmentHeadlessFallbackEnabled: readBoolean(
+      "DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED",
+      DEFAULT_DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED,
     ),
     geminiTokensPerMinute: readNumber("GEMINI_TOKENS_PER_MINUTE"),
     geminiTokenSafetyMargin: readNumber("GEMINI_TOKEN_SAFETY_MARGIN"),
@@ -70,4 +76,21 @@ function readPositiveInteger(key: string, defaultValue: number): number {
   }
 
   return parsed;
+}
+
+function readBoolean(key: string, defaultValue: boolean): boolean {
+  const value = process.env[key];
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "no", "off"].includes(normalized)) {
+    return false;
+  }
+
+  throw new Error(`Invalid boolean env var ${key}: ${value}`);
 }

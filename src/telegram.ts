@@ -1,4 +1,5 @@
 import type { JobMatchResult } from "./classifier";
+import type { EnrichedFeedJob } from "./rss-models";
 
 export type TelegramOptions = {
   botToken: string;
@@ -13,10 +14,14 @@ export type TelegramAlertStats = {
   skipped: number;
 };
 
+export type TelegramAlertResult = JobMatchResult & {
+  enrichedJob?: EnrichedFeedJob;
+};
+
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 export async function sendTelegramAlerts(
-  results: JobMatchResult[],
+  results: TelegramAlertResult[],
   options: TelegramOptions,
 ): Promise<TelegramAlertStats> {
   const stats: TelegramAlertStats = { sent: 0, failed: 0, skipped: 0 };
@@ -41,13 +46,14 @@ export async function sendTelegramAlerts(
   return stats;
 }
 
-function formatTelegramMessage(result: JobMatchResult): string {
+function formatTelegramMessage(result: TelegramAlertResult): string {
   const company = result.job.company ?? "Unknown";
+  const link = result.enrichedJob?.applyUrl ?? result.job.detailUrl;
   return [
     "Vibe-coder match found:",
     `Title: ${result.job.title}`,
     `Company: ${company}`,
-    `Link: ${result.job.detailUrl}`,
+    `Link: ${link}`,
   ].join("\n");
 }
 

@@ -39,11 +39,11 @@ Generated: 2026-02-19
 - [x] Persist per-job decision metadata needed for retry/idempotency.
 
 ## Phase 5: Detail Enrichment for Positive Matches Only
-- [ ] Fetch MoAIJobs detail page only when classifier result is `YES`.
-- [ ] Extract external apply URL from `Apply Now` button anchor.
-- [ ] Add fallback extraction from page JSON-LD (`JobPosting`) when anchor parsing fails.
-- [ ] If enrichment fails, keep MoAIJobs detail URL as safe fallback for alerting.
-- [ ] Keep headless extraction as optional fallback path behind a config flag.
+- [x] Fetch MoAIJobs detail page only when classifier result is `YES`.
+- [x] Extract external apply URL from `Apply Now` button anchor.
+- [x] Add fallback extraction from page JSON-LD (`JobPosting`) when anchor parsing fails.
+- [x] If enrichment fails, keep MoAIJobs detail URL as safe fallback for alerting.
+- [x] Keep headless extraction as optional fallback path behind a config flag.
 
 ## Phase 6: Telegram Message Upgrade
 - [ ] Update message format to include both `Details` (MoAIJobs URL) and `Apply` (external URL when available).
