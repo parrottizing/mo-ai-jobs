@@ -1,256 +1,87 @@
-# Ralph
+# MO AI Jobs Agent
 
-![Ralph](ralph.webp)
+Daily TypeScript agent that scans MoAIJobs for new listings, classifies each role against an AI-native candidate profile using Gemini, and sends Telegram alerts for matches.
 
-Ralph is an autonomous AI agent loop that runs AI coding tools ([Amp](https://ampcode.com) or [Claude Code](https://docs.anthropic.com/en/docs/claude-code)) repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+## What It Does
 
-Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
+1. Loads config from `.env`
+2. Reads `state.json` to get the last seen job
+3. Crawls MoAIJobs listings and collects only new jobs
+4. Opens each job in a headless browser and extracts structured details
+5. Classifies fit with Gemini (`gemma-3-27b-it` by default)
+6. Sends Telegram alerts for matching jobs only
+7. Updates `state.json` after successful processing
 
-[Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
+## Project Structure
 
-## Vibe Coder Job Agent
-
-This repo also contains a daily job agent that scans MoAIJobs, classifies roles, and sends Telegram alerts.
-
-### Environment
-
-Create a `.env` file with:
-
-```
-GOOGLE_API_KEY=...
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHAT_ID=...
-LISTINGS_URL=https://www.moaijobs.com/  # optional override
-GEMINI_TOKENS_PER_MINUTE=15000         # optional, default 15000
-GEMINI_TOKEN_SAFETY_MARGIN=0.6         # optional, default 0.6
-GEMINI_MIN_DELAY_MS=0                  # optional, extra delay between calls
-```
-
-### Run once
-
-```bash
-npx tsc
-node dist/index.js
-```
-
-### Built-in daily schedule
-
-Keep the process running and execute every 24 hours:
-
-```bash
-npx tsc
-node dist/index.js --schedule daily
-```
-
-### Cron example
-
-```bash
-0 9 * * * cd /path/to/repo && npx tsc && node dist/index.js >> /tmp/vibe-coder-agent.log 2>&1
-```
+- `src/index.ts`: Main orchestration (`runOnce`, `runDaily`)
+- `src/config.ts`: Environment config loading and validation
+- `src/state.ts`: Local state persistence (`lastSeenJobId`)
+- `src/listings.ts`: Listings crawl and pagination logic
+- `src/details.ts`: Headless-browser job detail extraction
+- `src/classifier.ts`: Gemini classification, rate-limit handling, retries
+- `src/telegram.ts`: Telegram alert delivery
+- `dist/`: Compiled JavaScript output
 
 ## Prerequisites
 
-- One of the following AI coding tools installed and authenticated:
-  - [Amp CLI](https://ampcode.com) (default)
-  - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`npm install -g @anthropic-ai/claude-code`)
-- `jq` installed (`brew install jq` on macOS)
-- A git repository for your project
+- Node.js 20+
+- A Chrome/Chromium binary available locally (or set one of: `CHROME_PATH`, `CHROMIUM_PATH`, `GOOGLE_CHROME_PATH`, `PUPPETEER_EXECUTABLE_PATH`)
+- Google Gemini API key
+- Telegram bot token and chat ID
 
-## Setup
+## Environment
 
-### Option 1: Copy to your project
-
-Copy the ralph files into your project:
+Create `.env` in the project root:
 
 ```bash
-# From your project root
-mkdir -p scripts/ralph
-cp /path/to/ralph/ralph.sh scripts/ralph/
-
-# Copy the prompt template for your AI tool of choice:
-cp /path/to/ralph/prompt.md scripts/ralph/prompt.md    # For Amp
-# OR
-cp /path/to/ralph/CLAUDE.md scripts/ralph/CLAUDE.md    # For Claude Code
-
-chmod +x scripts/ralph/ralph.sh
+GOOGLE_API_KEY=...
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+LISTINGS_URL=https://www.moaijobs.com/
+GEMINI_TOKENS_PER_MINUTE=15000
+GEMINI_TOKEN_SAFETY_MARGIN=0.6
+GEMINI_MIN_DELAY_MS=0
 ```
 
-### Option 2: Install skills globally
-
-Copy the skills to your Amp or Claude config for use across all projects:
-
-For AMP
-```bash
-cp -r skills/prd ~/.config/amp/skills/
-cp -r skills/ralph ~/.config/amp/skills/
-```
-
-For Claude Code
-```bash
-cp -r skills/prd ~/.claude/skills/
-cp -r skills/ralph ~/.claude/skills/
-```
-
-### Configure Amp auto-handoff (recommended)
-
-Add to `~/.config/amp/settings.json`:
-
-```json
-{
-  "amp.experimental.autoHandoff": { "context": 90 }
-}
-```
-
-This enables automatic handoff when context fills up, allowing Ralph to handle large stories that exceed a single context window.
-
-## Workflow
-
-### 1. Create a PRD
-
-Use the PRD skill to generate a detailed requirements document:
-
-```
-Load the prd skill and create a PRD for [your feature description]
-```
-
-Answer the clarifying questions. The skill saves output to `tasks/prd-[feature-name].md`.
-
-### 2. Convert PRD to Ralph format
-
-Use the Ralph skill to convert the markdown PRD to JSON:
-
-```
-Load the ralph skill and convert tasks/prd-[feature-name].md to prd.json
-```
-
-This creates `prd.json` with user stories structured for autonomous execution.
-
-### 3. Run Ralph
+## Install
 
 ```bash
-# Using Amp (default)
-./scripts/ralph/ralph.sh [max_iterations]
-
-# Using Claude Code
-./scripts/ralph/ralph.sh --tool claude [max_iterations]
-```
-
-Default is 10 iterations. Use `--tool amp` or `--tool claude` to select your AI coding tool.
-
-Ralph will:
-1. Create a feature branch (from PRD `branchName`)
-2. Pick the highest priority story where `passes: false`
-3. Implement that single story
-4. Run quality checks (typecheck, tests)
-5. Commit if checks pass
-6. Update `prd.json` to mark story as `passes: true`
-7. Append learnings to `progress.txt`
-8. Repeat until all stories pass or max iterations reached
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `ralph.sh` | The bash loop that spawns fresh AI instances (supports `--tool amp` or `--tool claude`) |
-| `prompt.md` | Prompt template for Amp |
-| `CLAUDE.md` | Prompt template for Claude Code |
-| `prd.json` | User stories with `passes` status (the task list) |
-| `prd.json.example` | Example PRD format for reference |
-| `progress.txt` | Append-only learnings for future iterations |
-| `skills/prd/` | Skill for generating PRDs |
-| `skills/ralph/` | Skill for converting PRDs to JSON |
-| `flowchart/` | Interactive visualization of how Ralph works |
-
-## Flowchart
-
-[![Ralph Flowchart](ralph-flowchart.png)](https://snarktank.github.io/ralph/)
-
-**[View Interactive Flowchart](https://snarktank.github.io/ralph/)** - Click through to see each step with animations.
-
-The `flowchart/` directory contains the source code. To run locally:
-
-```bash
-cd flowchart
 npm install
-npm run dev
 ```
 
-## Critical Concepts
+## Build and Run
 
-### Each Iteration = Fresh Context
-
-Each iteration spawns a **new AI instance** (Amp or Claude Code) with clean context. The only memory between iterations is:
-- Git history (commits from previous iterations)
-- `progress.txt` (learnings and context)
-- `prd.json` (which stories are done)
-
-### Small Tasks
-
-Each PRD item should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
-
-Right-sized stories:
-- Add a database column and migration
-- Add a UI component to an existing page
-- Update a server action with new logic
-- Add a filter dropdown to a list
-
-Too big (split these):
-- "Build the entire dashboard"
-- "Add authentication"
-- "Refactor the API"
-
-### AGENTS.md Updates Are Critical
-
-After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings. This is key because AI coding tools automatically read these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
-
-Examples of what to add to AGENTS.md:
-- Patterns discovered ("this codebase uses X for Y")
-- Gotchas ("do not forget to update Z when changing W")
-- Useful context ("the settings panel is in component X")
-
-### Feedback Loops
-
-Ralph only works if there are feedback loops:
-- Typecheck catches type errors
-- Tests verify behavior
-- CI must stay green (broken code compounds across iterations)
-
-### Browser Verification for UI Stories
-
-Frontend stories must include "Verify in browser using dev-browser skill" in acceptance criteria. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
-
-### Stop Condition
-
-When all stories have `passes: true`, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
-
-## Debugging
-
-Check current state:
+Typecheck:
 
 ```bash
-# See which stories are done
-cat prd.json | jq '.userStories[] | {id, title, passes}'
-
-# See learnings from previous iterations
-cat progress.txt
-
-# Check git history
-git log --oneline -10
+npm run typecheck
 ```
 
-## Customizing the Prompt
+Compile:
 
-After copying `prompt.md` (for Amp) or `CLAUDE.md` (for Claude Code) to your project, customize it for your project:
-- Add project-specific quality check commands
-- Include codebase conventions
-- Add common gotchas for your stack
+```bash
+npx tsc
+```
 
-## Archiving
+Run once:
 
-Ralph automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/YYYY-MM-DD-feature-name/`.
+```bash
+node dist/index.js
+```
 
-## References
+Run every 24 hours:
 
-- [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
-- [Amp documentation](https://ampcode.com/manual)
-- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code)
+```bash
+node dist/index.js --schedule daily
+```
+
+## Output Files
+
+- `state.json`: stores `lastSeenJobId`
+- `extraction_result.txt`, `manual_extraction.txt`: optional local debug artifacts
+
+## Notes
+
+- Classification is deterministic-oriented and expects model output beginning with `YES` or `NO`.
+- Telegram failures are logged per message and do not stop the full run.

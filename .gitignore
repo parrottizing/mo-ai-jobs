@@ -1,15 +1,14 @@
-# Ralph working files (generated during runs)
-prd.json
-progress.txt
-.last-branch
-
-# Archive is optional to commit
-# archive/
-
-# OS files
+# Local environment and machine files
+.env
 .DS_Store
+
+# Dependencies
 node_modules/
 
-#Claude
+# Local agent state / debug artifacts
+state.json
+extraction_result.txt
+manual_extraction.txt
+
+# Local tool workspace
 .claude/
-.env
