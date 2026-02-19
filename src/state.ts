@@ -1,16 +1,32 @@
 import { promises as fs } from "fs";
 
 export type JobState = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   lastSeenJobId: string | null;
   latestSeenPubDate: string | null;
   seenIds: string[];
   notifiedIds: string[];
+  classificationDecisions: ClassificationDecisionRecord[];
 };
 
-export const STATE_SCHEMA_VERSION = 1;
+export type ClassificationDecisionRecord = {
+  jobId: string;
+  match: boolean;
+  rationale: string;
+  rawResponse: string;
+  decidedAt: string;
+  model: string;
+  promptTokens: number;
+  descriptionChars: number;
+  descriptionCharsUsed: number;
+  descriptionWasClipped: boolean;
+};
+
+export const STATE_SCHEMA_VERSION = 2;
 export const MAX_SEEN_IDS = 5_000;
 export const MAX_NOTIFIED_IDS = 5_000;
+export const MAX_CLASSIFICATION_DECISIONS = 5_000;
+const DEFAULT_DECIDED_AT = "1970-01-01T00:00:00.000Z";
 
 const DEFAULT_STATE: JobState = createDefaultState();
 
@@ -62,6 +78,10 @@ function normalizeState(input: unknown): JobState {
     latestSeenPubDate: readNullableString(parsed.latestSeenPubDate),
     seenIds: normalizeIds(parsed.seenIds, MAX_SEEN_IDS),
     notifiedIds: normalizeIds(parsed.notifiedIds, MAX_NOTIFIED_IDS),
+    classificationDecisions: normalizeClassificationDecisions(
+      parsed.classificationDecisions,
+      MAX_CLASSIFICATION_DECISIONS,
+    ),
   };
 }
 
@@ -90,6 +110,10 @@ function stateNeedsRewrite(raw: unknown, normalized: JobState): boolean {
     return true;
   }
 
+  if (!classificationDecisionsEqual(raw.classificationDecisions, normalized.classificationDecisions)) {
+    return true;
+  }
+
   return false;
 }
 
@@ -100,6 +124,55 @@ function stringArrayEquals(value: unknown, expected: string[]): boolean {
 
   for (let i = 0; i < expected.length; i += 1) {
     if (value[i] !== expected[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function classificationDecisionsEqual(
+  value: unknown,
+  expected: ClassificationDecisionRecord[],
+): boolean {
+  if (!Array.isArray(value) || value.length !== expected.length) {
+    return false;
+  }
+
+  for (let i = 0; i < expected.length; i += 1) {
+    const actual = value[i];
+    const target = expected[i];
+    if (!isRecord(actual)) {
+      return false;
+    }
+    if (actual.jobId !== target.jobId) {
+      return false;
+    }
+    if (actual.match !== target.match) {
+      return false;
+    }
+    if (actual.rationale !== target.rationale) {
+      return false;
+    }
+    if (actual.rawResponse !== target.rawResponse) {
+      return false;
+    }
+    if (actual.decidedAt !== target.decidedAt) {
+      return false;
+    }
+    if (actual.model !== target.model) {
+      return false;
+    }
+    if (actual.promptTokens !== target.promptTokens) {
+      return false;
+    }
+    if (actual.descriptionChars !== target.descriptionChars) {
+      return false;
+    }
+    if (actual.descriptionCharsUsed !== target.descriptionCharsUsed) {
+      return false;
+    }
+    if (actual.descriptionWasClipped !== target.descriptionWasClipped) {
       return false;
     }
   }
@@ -136,6 +209,62 @@ function normalizeIds(value: unknown, maxSize: number): string[] {
   return normalized.slice(normalized.length - maxSize);
 }
 
+function normalizeClassificationDecisions(
+  value: unknown,
+  maxSize: number,
+): ClassificationDecisionRecord[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const dedupedByJobId = new Map<string, ClassificationDecisionRecord>();
+
+  for (const item of value) {
+    const normalized = normalizeClassificationDecision(item);
+    if (!normalized) {
+      continue;
+    }
+
+    if (dedupedByJobId.has(normalized.jobId)) {
+      dedupedByJobId.delete(normalized.jobId);
+    }
+    dedupedByJobId.set(normalized.jobId, normalized);
+  }
+
+  const normalized = Array.from(dedupedByJobId.values());
+  if (normalized.length <= maxSize) {
+    return normalized;
+  }
+
+  return normalized.slice(normalized.length - maxSize);
+}
+
+function normalizeClassificationDecision(value: unknown): ClassificationDecisionRecord | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const jobId = readNullableString(value.jobId);
+  if (!jobId) {
+    return null;
+  }
+
+  const decidedAt = readNullableIsoTimestamp(value.decidedAt) ?? DEFAULT_DECIDED_AT;
+
+  return {
+    jobId,
+    match: readBoolean(value.match),
+    rationale: readString(value.rationale),
+    rawResponse: readString(value.rawResponse),
+    decidedAt,
+    model: readString(value.model),
+    promptTokens: readNonNegativeInteger(value.promptTokens),
+    descriptionChars: readNonNegativeInteger(value.descriptionChars),
+    descriptionCharsUsed: readNonNegativeInteger(value.descriptionCharsUsed),
+    descriptionWasClipped: readBoolean(value.descriptionWasClipped),
+  };
+}
+
 function readNullableString(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
@@ -143,6 +272,38 @@ function readNullableString(value: unknown): string | null {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function readString(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.trim();
+}
+
+function readBoolean(value: unknown): boolean {
+  return value === true;
+}
+
+function readNonNegativeInteger(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    return 0;
+  }
+  return value;
+}
+
+function readNullableIsoTimestamp(value: unknown): string | null {
+  const normalized = readNullableString(value);
+  if (!normalized) {
+    return null;
+  }
+
+  const timestamp = Date.parse(normalized);
+  if (!Number.isFinite(timestamp)) {
+    return null;
+  }
+
+  return new Date(timestamp).toISOString();
 }
 
 function isRecord(value: unknown): value is StateLikeRecord {
@@ -156,6 +317,7 @@ function createDefaultState(): JobState {
     latestSeenPubDate: null,
     seenIds: [],
     notifiedIds: [],
+    classificationDecisions: [],
   };
 }
 

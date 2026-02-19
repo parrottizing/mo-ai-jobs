@@ -1,8 +1,12 @@
 import { loadConfig } from "./config";
-import { fetchJobDetails, type JobDetails } from "./details";
-import { classifyJobs } from "./classifier";
+import { classifyJobs, type JobMatchResult } from "./classifier";
 import { collectNewFeedJobs } from "./listings";
-import { loadState, saveState } from "./state";
+import type { FeedJob } from "./rss-models";
+import {
+  loadState,
+  saveState,
+  type ClassificationDecisionRecord,
+} from "./state";
 import { sendTelegramAlerts, type TelegramAlertStats } from "./telegram";
 
 export * from "./details";
@@ -45,11 +49,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
     seenIds: state.seenIds,
     maxItemsPerRun: config.maxFeedItemsPerRun,
   });
-  const newJobs = newFeedJobs.map((job) => ({
-    id: job.id,
-    title: job.title,
-    url: job.detailUrl,
-  }));
+  const newJobs = dedupeFeedJobsById(newFeedJobs);
 
   log(`New jobs found: ${newJobs.length}`);
 
@@ -63,15 +63,11 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
     return summary;
   }
 
-  const details: JobDetails[] = [];
-  for (let i = 0; i < newJobs.length; i++) {
-    const job = newJobs[i];
-    log(`Fetching job details (${i + 1}/${newJobs.length}): ${job.title}`);
-    details.push(await fetchJobDetails(job));
-  }
+  log(`Classifying ${newJobs.length} jobs from RSS fields.`);
 
-  const matchResults = await classifyJobs(details, {
+  const matchResults = await classifyJobs(newJobs, {
     apiKey: config.googleApiKey,
+    descriptionCharCap: config.classifierDescriptionCharCap,
     rateLimit: {
       tokensPerMinute: config.geminiTokensPerMinute,
       safetyMargin: config.geminiTokenSafetyMargin,
@@ -89,8 +85,12 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   await saveState(config.stateFilePath, {
     ...state,
     lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
-    latestSeenPubDate: getLatestSeenPubDate(state.latestSeenPubDate, newFeedJobs),
-    seenIds: mergeSeenIds(state.seenIds, newFeedJobs.map((job) => job.id)),
+    latestSeenPubDate: getLatestSeenPubDate(state.latestSeenPubDate, newJobs),
+    seenIds: mergeSeenIds(state.seenIds, newJobs.map((job) => job.id)),
+    classificationDecisions: mergeClassificationDecisions(
+      state.classificationDecisions,
+      matchResults,
+    ),
   });
 
   const summary = buildRunSummary(startedAt, new Date(), newJobs.length, matchCount, alertStats);
@@ -223,4 +223,54 @@ function parseTimestamp(value: string | null): number | null {
   }
   const timestamp = Date.parse(value);
   return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function dedupeFeedJobsById(jobs: FeedJob[]): FeedJob[] {
+  const deduped: FeedJob[] = [];
+  const seen = new Set<string>();
+
+  for (const job of jobs) {
+    const id = job.id.trim();
+    if (!id || seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    deduped.push(job);
+  }
+
+  return deduped;
+}
+
+function mergeClassificationDecisions(
+  existing: ClassificationDecisionRecord[],
+  results: JobMatchResult[],
+): ClassificationDecisionRecord[] {
+  const incomingByJobId = new Map<string, ClassificationDecisionRecord>();
+
+  for (const result of results) {
+    const jobId = result.job.id.trim();
+    if (!jobId) {
+      continue;
+    }
+
+    incomingByJobId.set(jobId, {
+      jobId,
+      match: result.match,
+      rationale: result.rationale,
+      rawResponse: result.rawResponse,
+      decidedAt: result.decision.decidedAt,
+      model: result.decision.model,
+      promptTokens: result.decision.promptTokens,
+      descriptionChars: result.decision.descriptionChars,
+      descriptionCharsUsed: result.decision.descriptionCharsUsed,
+      descriptionWasClipped: result.decision.descriptionWasClipped,
+    });
+  }
+
+  const merged = existing.filter((entry) => !incomingByJobId.has(entry.jobId));
+  for (const entry of incomingByJobId.values()) {
+    merged.push(entry);
+  }
+
+  return merged;
 }

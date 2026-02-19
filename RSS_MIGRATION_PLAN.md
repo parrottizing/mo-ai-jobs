@@ -33,10 +33,10 @@ Generated: 2026-02-19
 - [x] Deduplicate items within the same run.
 
 ## Phase 4: Classification Pipeline (RSS Data First)
-- [ ] Build classifier input from RSS fields only (`title`, `company`, `location`, `tags`, cleaned description).
-- [ ] Truncate/clip long descriptions before LLM calls to control token usage.
-- [ ] Classify only truly new jobs after dedupe.
-- [ ] Persist per-job decision metadata needed for retry/idempotency.
+- [x] Build classifier input from RSS fields only (`title`, `company`, `location`, `tags`, cleaned description).
+- [x] Truncate/clip long descriptions before LLM calls to control token usage.
+- [x] Classify only truly new jobs after dedupe.
+- [x] Persist per-job decision metadata needed for retry/idempotency.
 
 ## Phase 5: Detail Enrichment for Positive Matches Only
 - [ ] Fetch MoAIJobs detail page only when classifier result is `YES`.

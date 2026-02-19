@@ -47,7 +47,7 @@ function formatTelegramMessage(result: JobMatchResult): string {
     "Vibe-coder match found:",
     `Title: ${result.job.title}`,
     `Company: ${company}`,
-    `Link: ${result.job.url}`,
+    `Link: ${result.job.detailUrl}`,
   ].join("\n");
 }
 
