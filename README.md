@@ -79,7 +79,6 @@ node dist/index.js --schedule daily
 ## Output Files
 
 - `state.json`: stores `lastSeenJobId`
-- `extraction_result.txt`, `manual_extraction.txt`: optional local debug artifacts
 
 ## Notes
 

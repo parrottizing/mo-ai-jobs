@@ -4,11 +4,10 @@
 
 # Dependencies
 node_modules/
+dist/
 
 # Local agent state / debug artifacts
 state.json
-extraction_result.txt
-manual_extraction.txt
 
 # Local tool workspace
 .claude/
