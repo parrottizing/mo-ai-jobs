@@ -7,9 +7,9 @@ Generated: 2026-02-19
 - [ ] Preserve alert quality while reducing runtime, fragility, and unnecessary network/browser work.
 
 ## Phase 0: Baseline and Safety
-- [ ] Create a working branch for the migration (`codex/rss-first-architecture`).
-- [ ] Record baseline metrics from the current pipeline (new jobs count, matches count, runtime, Telegram sent count).
-- [ ] Backup `state.json` and document the current state schema.
+- [x] Create a working branch for the migration (`codex/rss-first-architecture`).
+- [x] Record baseline metrics from the current pipeline (new jobs count, matches count, runtime, Telegram sent count) in `migration/phase0/baseline-metrics.json`.
+- [x] Backup `state.json` and document the current state schema in `migration/phase0/state-backups/` and `migration/phase0/state-schema-v0.md`.
 
 ## Phase 1: Config and Data Contracts
 - [ ] Add `RSS_FEED_URL` config with default `https://www.moaijobs.com/ai-jobs.rss`.

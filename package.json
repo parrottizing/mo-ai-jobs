@@ -4,7 +4,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "phase0": "node dist/phase0.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5"

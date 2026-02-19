@@ -1,0 +1,23 @@
+{
+  "recordedAt": "2026-02-19T16:18:07.779Z",
+  "stateFilePath": "state.json",
+  "stateBeforeRun": {
+    "lastSeenJobId": "senior-robotics-perception-engineer-maihem-8117"
+  },
+  "metrics": {
+    "newJobsCount": 0,
+    "matchesCount": 0,
+    "runtimeMs": 1073,
+    "telegramSentCount": 0
+  },
+  "runSummary": {
+    "startedAt": "2026-02-19T16:18:06.705Z",
+    "finishedAt": "2026-02-19T16:18:07.778Z",
+    "runtimeMs": 1073,
+    "newJobsCount": 0,
+    "matchesCount": 0,
+    "telegramSentCount": 0,
+    "telegramFailedCount": 0,
+    "telegramSkippedCount": 0
+  }
+}

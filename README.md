@@ -76,9 +76,25 @@ Run every 24 hours:
 node dist/index.js --schedule daily
 ```
 
+Phase 0 migration baseline (after `npx tsc`):
+
+```bash
+npm run phase0
+```
+
+Optional flags for `dist/phase0.js`:
+
+- `--state-file <path>` (default: `state.json`)
+- `--metrics-path <path>` (default: `migration/phase0/baseline-metrics.json`)
+- `--backup-dir <path>` (default: `migration/phase0/state-backups`)
+- `--schema-path <path>` (default: `migration/phase0/state-schema-v0.md`)
+
 ## Output Files
 
 - `state.json`: stores `lastSeenJobId`
+- `migration/phase0/baseline-metrics.json`: baseline run summary (new jobs, matches, runtime, Telegram sent count)
+- `migration/phase0/state-backups/`: timestamped `state.json` backups captured before baseline run
+- `migration/phase0/state-schema-v0.md`: documented pre-migration state schema
 
 ## Notes
 

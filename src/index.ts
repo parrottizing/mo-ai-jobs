@@ -3,7 +3,7 @@ import { fetchJobDetails, type JobDetails } from "./details";
 import { classifyJobs } from "./classifier";
 import { collectNewJobs } from "./listings";
 import { loadState, saveState } from "./state";
-import { sendTelegramAlerts } from "./telegram";
+import { sendTelegramAlerts, type TelegramAlertStats } from "./telegram";
 
 export * from "./details";
 export * from "./listings";
@@ -12,8 +12,27 @@ export * from "./telegram";
 
 const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
+export type RunSummary = {
+  startedAt: string;
+  finishedAt: string;
+  runtimeMs: number;
+  newJobsCount: number;
+  matchesCount: number;
+  telegramSentCount: number;
+  telegramFailedCount: number;
+  telegramSkippedCount: number;
+};
+
+export type RunOnceOptions = {
+  stateFilePath?: string;
+};
+
 export async function runOnce(): Promise<void> {
-  const config = loadConfig();
+  await runOnceWithSummary();
+}
+
+export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<RunSummary> {
+  const config = loadConfig(options.stateFilePath);
   const state = await loadState(config.stateFilePath);
   const startedAt = new Date();
 
@@ -27,8 +46,13 @@ export async function runOnce(): Promise<void> {
   log(`New jobs found: ${newJobs.length}`);
 
   if (newJobs.length === 0) {
-    log("Run completed. Matches: 0.");
-    return;
+    const summary = buildRunSummary(startedAt, new Date(), 0, 0, {
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+    });
+    log(`Run completed. New jobs: 0. Matches: 0. Runtime: ${summary.runtimeMs}ms.`);
+    return summary;
   }
 
   const details: JobDetails[] = [];
@@ -58,8 +82,11 @@ export async function runOnce(): Promise<void> {
     lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
   });
 
+  const summary = buildRunSummary(startedAt, new Date(), newJobs.length, matchCount, alertStats);
+
   log(`Telegram alerts: sent ${alertStats.sent}, failed ${alertStats.failed}, skipped ${alertStats.skipped}.`);
-  log(`Run completed. New jobs: ${newJobs.length}. Matches: ${matchCount}.`);
+  log(`Run completed. New jobs: ${newJobs.length}. Matches: ${matchCount}. Runtime: ${summary.runtimeMs}ms.`);
+  return summary;
 }
 
 export async function runDaily(): Promise<void> {
@@ -130,4 +157,23 @@ function parseArgs(argv: string[]): { schedule?: string } {
   }
 
   return { schedule };
+}
+
+function buildRunSummary(
+  startedAt: Date,
+  finishedAt: Date,
+  newJobsCount: number,
+  matchesCount: number,
+  alertStats: TelegramAlertStats,
+): RunSummary {
+  return {
+    startedAt: startedAt.toISOString(),
+    finishedAt: finishedAt.toISOString(),
+    runtimeMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
+    newJobsCount,
+    matchesCount,
+    telegramSentCount: alertStats.sent,
+    telegramFailedCount: alertStats.failed,
+    telegramSkippedCount: alertStats.skipped,
+  };
 }
