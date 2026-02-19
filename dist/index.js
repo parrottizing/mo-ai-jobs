@@ -43,7 +43,9 @@ async function runOnce() {
         return;
     }
     const details = [];
-    for (const job of newJobs) {
+    for (let i = 0; i < newJobs.length; i++) {
+        const job = newJobs[i];
+        log(`Fetching job details (${i + 1}/${newJobs.length}): ${job.title}`);
         details.push(await (0, details_1.fetchJobDetails)(job));
     }
     const matchResults = await (0, classifier_1.classifyJobs)(details, {

@@ -96,10 +96,10 @@ function extractFromHtml(html) {
     const location = extractByLabel(html, ["location", "remote", "region"]) ??
         extractClassText(html, ["location", "job-location"]);
     const tags = extractTags(html);
-    const description = extractSection(html, ["job-description", "description"]) ??
+    const description = applyCutoff(extractSection(html, ["job-description", "description"]) ??
         extractTagBlock(html, "article") ??
         extractTagBlock(html, "main") ??
-        normalizeWhitespace(stripTags(html));
+        normalizeWhitespace(stripTags(html)));
     return {
         title,
         company,
@@ -107,6 +107,26 @@ function extractFromHtml(html) {
         tags,
         description: description ?? "",
     };
+}
+function applyCutoff(text) {
+    if (!text) {
+        return null;
+    }
+    const cutoffs = [
+        "Similar Jobs",
+        "Browse all AI jobs",
+        "Looking for something different?",
+        "Post a Job",
+        "Share this job opportunity",
+    ];
+    let lowestIndex = text.length;
+    for (const marker of cutoffs) {
+        const index = text.indexOf(marker);
+        if (index !== -1 && index < lowestIndex) {
+            lowestIndex = index;
+        }
+    }
+    return text.slice(0, lowestIndex).trim();
 }
 function extractTagText(html, tag) {
     const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");

@@ -20,17 +20,23 @@ async function classifyJob(job, options) {
 }
 function buildPrompt(job) {
     return [
-        "You are classifying job listings for a 'vibe coder' role.",
-        "A vibe coder role is focused on rapid prototyping, product hacking, shipping fast, and experimental engineering.",
-        "Signals include: early-stage startups, fast iteration, product-minded engineering, shipping MVPs, automation, rapid AI tooling.",
-        "Negative signals include: large enterprise, compliance-heavy roles, long-term maintenance only, or purely academic research.",
-        "Return ONLY valid JSON with keys: match (boolean), rationale (short string <= 20 words).",
-        "Job details:",
+        "You are evaluating if a candidate is qualified for a job posting.",
+        "",
+        "CANDIDATE PROFILE:",
+        "- 3.5 years of deep AI experience, using approximately 200 different AI services.",
+        "- Experienced 'vibecoder' who builds automation and code projects exclusively using AI agents.",
+        "- Proficient with AI coding tools: Cursor, Claude Code, various IDE and CLI AI agents.",
+        "- Strong understanding of context engineering and prompt engineering.",
+        "- KEY CONSTRAINT: Not a traditional developer. Cannot write code without AI assistance.",
+        "- Qualified for roles that embrace AI-driven development and don't strictly require manual coding interviews or deep syntax knowledge.",
+        "",
+        "JOB POSTING:",
         `Title: ${job.title}`,
         `Company: ${job.company ?? "Unknown"}`,
-        `Location: ${job.location ?? "Unknown"}`,
-        `Tags: ${job.tags.length > 0 ? job.tags.join(", ") : "None"}`,
         `Description: ${job.description}`,
+        "",
+        "Question: Is this candidate qualified for this job?",
+        "Answer with one word only: YES or NO.",
     ].join("\n");
 }
 async function classifyJobWithPrompt(job, prompt, options) {
@@ -178,41 +184,14 @@ function extractGeminiText(data) {
     return combined || null;
 }
 function parseClassification(text) {
-    const normalized = text.trim();
-    const direct = tryParseJson(normalized);
-    if (direct) {
-        return normalizeClassification(direct);
+    const normalized = text.trim().toUpperCase();
+    // Check for YES at the start of the response
+    if (normalized.startsWith("YES")) {
+        return { match: true, rationale: "Qualified based on AI-native profile." };
     }
-    const start = normalized.indexOf("{");
-    const end = normalized.lastIndexOf("}");
-    if (start >= 0 && end > start) {
-        const extracted = normalized.slice(start, end + 1);
-        const parsed = tryParseJson(extracted);
-        if (parsed) {
-            return normalizeClassification(parsed);
-        }
+    // Check for NO at the start of the response
+    if (normalized.startsWith("NO")) {
+        return { match: false, rationale: "Not qualified for this role." };
     }
     return null;
-}
-function tryParseJson(text) {
-    try {
-        return JSON.parse(text);
-    }
-    catch {
-        return null;
-    }
-}
-function normalizeClassification(value) {
-    if (!value || typeof value !== "object") {
-        return null;
-    }
-    const record = value;
-    if (typeof record.match !== "boolean") {
-        return null;
-    }
-    const rationale = typeof record.rationale === "string" ? record.rationale.trim() : "";
-    return {
-        match: record.match,
-        rationale: rationale || (record.match ? "Matches vibe-coder signals." : "Does not match vibe-coder signals."),
-    };
 }
