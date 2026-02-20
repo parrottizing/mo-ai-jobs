@@ -5,7 +5,6 @@ export type AppConfig = {
   telegramBotToken: string;
   telegramChatId: string;
   stateFilePath: string;
-  listingsUrl: string;
   rssFeedUrl: string;
   maxFeedItemsPerRun: number;
   rssFetchMaxAttempts: number;
@@ -19,7 +18,6 @@ export type AppConfig = {
 };
 
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
-const DEFAULT_LISTINGS_URL = "https://www.moaijobs.com/";
 const DEFAULT_RSS_FEED_URL = "https://www.moaijobs.com/ai-jobs.rss";
 const DEFAULT_MAX_FEED_ITEMS_PER_RUN = 100;
 const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
@@ -50,7 +48,6 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN as string,
     telegramChatId: process.env.TELEGRAM_CHAT_ID as string,
     stateFilePath,
-    listingsUrl: process.env.LISTINGS_URL?.trim() || DEFAULT_LISTINGS_URL,
     rssFeedUrl: process.env.RSS_FEED_URL?.trim() || DEFAULT_RSS_FEED_URL,
     maxFeedItemsPerRun: readPositiveInteger("RSS_MAX_ITEMS_PER_RUN", DEFAULT_MAX_FEED_ITEMS_PER_RUN),
     rssFetchMaxAttempts: readPositiveInteger("RSS_FETCH_MAX_ATTEMPTS", DEFAULT_RSS_FETCH_MAX_ATTEMPTS),

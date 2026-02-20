@@ -1,11 +1,5 @@
 import type { FeedJob } from "./rss-models";
 
-export type JobListing = {
-  id: string;
-  title: string;
-  url: string;
-};
-
 export type RssRetryEvent = {
   attempt: number;
   maxAttempts: number;
@@ -36,20 +30,6 @@ const DEFAULT_MAX_ITEMS_PER_RUN = 100;
 const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
 const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
 const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
-
-export async function collectNewJobs(options: CollectOptions): Promise<JobListing[]> {
-  const feedJobs = await collectNewFeedJobs(options);
-  return feedJobs.map((job) => ({
-    id: job.id,
-    title: job.title,
-    url: job.detailUrl,
-  }));
-}
-
-export async function collectNewFeedJobs(options: CollectOptions): Promise<FeedJob[]> {
-  const result = await collectFeedJobs(options);
-  return result.newFeedJobs;
-}
 
 export async function collectFeedJobs(options: CollectOptions): Promise<CollectFeedJobsResult> {
   const {

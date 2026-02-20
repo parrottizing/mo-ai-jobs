@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "phase0": "node dist/phase0.js",
-    "phase8": "node dist/phase8.js"
+    "phase8": "node dist/phase8.js",
+    "phase9": "node dist/phase9.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5"

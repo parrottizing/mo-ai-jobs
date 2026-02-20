@@ -72,10 +72,10 @@ Generated: 2026-02-19
 - [x] Compare runtime and request count against baseline.
 
 ## Phase 9: Rollout
-- [ ] Deploy changes with backup of previous build artifacts.
-- [ ] Monitor first 3 scheduled runs for duplicate alerts and enrichment failures.
-- [ ] If stable, remove dead code paths from legacy full-site listing crawl.
-- [ ] Update `README.md` and `AGENTS.md` notes for new architecture behavior.
+- [x] Deploy changes with backup of previous build artifacts (`src/phase9.ts` backs up `dist/` before rebuild).
+- [x] Monitor first 3 scheduled runs for duplicate alerts and enrichment failures (`src/phase9.ts` monitors 3 runs and writes `migration/phase9/rollout-report.json`).
+- [x] If stable, remove dead code paths from legacy full-site listing crawl.
+- [x] Update `README.md` and `AGENTS.md` notes for new architecture behavior.
 
 ## Done Criteria
 - [ ] New jobs are discovered from RSS only.

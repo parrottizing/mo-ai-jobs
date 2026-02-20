@@ -1,36 +1,37 @@
 # MO AI Jobs Agent
 
-Daily TypeScript agent that scans MoAIJobs for new listings, classifies each role against an AI-native candidate profile using Gemini, and sends Telegram alerts for matches.
+RSS-first TypeScript agent that reads new MoAIJobs entries from the feed, classifies fit with Gemini, enriches only positive matches, and sends Telegram alerts.
 
 ## What It Does
 
-1. Loads config from `.env`
-2. Reads `state.json` to get the last seen job
-3. Crawls MoAIJobs listings and collects only new jobs
-4. Opens each job in a headless browser and extracts structured details
-5. Classifies fit with Gemini (`gemma-3-27b-it` by default)
-6. Sends Telegram alerts for matching jobs only
-7. Updates `state.json` after successful processing
+1. Loads configuration from `.env`.
+2. Reads persisted state (`schemaVersion`, `latestSeenPubDate`, `seenIds`, `notifiedIds`).
+3. Fetches and parses the RSS feed (with retry/backoff).
+4. Classifies only new RSS jobs from feed fields (`title`, `company`, `location`, `tags`, `description`).
+5. Enriches only `YES` matches by extracting external apply links from the detail page.
+6. Sends Telegram alerts with both `Details` and `Apply` links.
+7. Persists updated cursor/dedupe/classification state after successful processing.
 
 ## Project Structure
 
-- `src/index.ts`: Main orchestration (`runOnce`, `runDaily`)
-- `src/config.ts`: Environment config loading and validation
-- `src/state.ts`: Local state persistence (`lastSeenJobId`)
-- `src/listings.ts`: Listings crawl and pagination logic
-- `src/rss-models.ts`: RSS feed-level and enrichment data contracts
-- `src/details.ts`: Headless-browser job detail extraction
-- `src/classifier.ts`: Gemini classification, rate-limit handling, retries
-- `src/telegram.ts`: Telegram alert delivery
-- `src/phase8.ts`: Automated Phase 8 validation harness
-- `dist/`: Compiled JavaScript output
+- `src/index.ts`: Main orchestration (`runOnce`, `runDaily`, summaries/counters).
+- `src/config.ts`: Environment loading and validation.
+- `src/state.ts`: State schema normalization and persistence (`schemaVersion: 2`).
+- `src/listings.ts`: RSS ingestion, normalization, dedupe, and cursor stop conditions.
+- `src/rss-models.ts`: Feed and enrichment data contracts.
+- `src/details.ts`: Positive-match detail enrichment (HTTP first, optional headless fallback).
+- `src/classifier.ts`: Gemini classification, token/rate control, retries.
+- `src/telegram.ts`: Telegram delivery and idempotent send handling.
+- `src/phase0.ts`: Baseline/safety artifact generator.
+- `src/phase8.ts`: Validation and verification harness.
+- `src/phase9.ts`: Rollout helper (build backup + monitored runs report).
 
 ## Prerequisites
 
 - Node.js 20+
-- A Chrome/Chromium binary available locally (or set one of: `CHROME_PATH`, `CHROMIUM_PATH`, `GOOGLE_CHROME_PATH`, `PUPPETEER_EXECUTABLE_PATH`)
 - Google Gemini API key
 - Telegram bot token and chat ID
+- Optional Chrome/Chromium binary only if `DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED=true`
 
 ## Environment
 
@@ -40,7 +41,6 @@ Create `.env` in the project root:
 GOOGLE_API_KEY=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
-LISTINGS_URL=https://www.moaijobs.com/
 RSS_FEED_URL=https://www.moaijobs.com/ai-jobs.rss
 RSS_MAX_ITEMS_PER_RUN=100
 RSS_FETCH_MAX_ATTEMPTS=3
@@ -52,8 +52,6 @@ GEMINI_TOKEN_SAFETY_MARGIN=0.6
 GEMINI_MIN_DELAY_MS=0
 DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED=false
 ```
-
-`RSS_FEED_URL`, `RSS_MAX_ITEMS_PER_RUN`, `RSS_FETCH_MAX_ATTEMPTS`, `RSS_FETCH_INITIAL_BACKOFF_MS`, `RSS_FETCH_MAX_BACKOFF_MS`, `CLASSIFIER_DESCRIPTION_CHAR_CAP`, and `DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED` are migration-forward settings for the RSS-first pipeline.
 
 ## Install
 
@@ -87,18 +85,33 @@ Run every 24 hours:
 node dist/index.js --schedule daily
 ```
 
-Phase 0 migration baseline (after `npx tsc`):
+Phase 0 baseline artifacts:
 
 ```bash
+npx tsc
 npm run phase0
 ```
 
-Phase 8 validation and verification (runs typecheck + compile + two controlled pipeline runs):
+Phase 8 verification:
 
 ```bash
 npx tsc
 npm run phase8
 ```
+
+Phase 9 rollout helper:
+
+```bash
+npx tsc
+npm run phase9
+```
+
+`phase9` will:
+
+1. Back up existing `dist/` artifacts to `migration/phase9/dist-backups/` (if present).
+2. Rebuild `dist/` with `npx tsc` (unless `--skip-build` is used).
+3. Run the pipeline 3 times (default) and detect duplicate alert IDs, enrichment failures, and Telegram failures.
+4. Write a report to `migration/phase9/rollout-report.json`.
 
 Optional flags for `dist/phase0.js`:
 
@@ -113,16 +126,27 @@ Optional flags for `dist/phase8.js`:
 - `--report-path <path>` (default: `migration/phase8/validation-report.json`)
 - `--baseline-metrics-path <path>` (default: `migration/phase0/baseline-metrics.json`)
 
+Optional flags for `dist/phase9.js`:
+
+- `--state-file <path>` (default: `state.json`)
+- `--report-path <path>` (default: `migration/phase9/rollout-report.json`)
+- `--dist-dir <path>` (default: `dist`)
+- `--backup-dir <path>` (default: `migration/phase9/dist-backups`)
+- `--runs <count>` (default: `3`)
+- `--skip-build`
+
 ## Output Files
 
-- `state.json`: stores pipeline cursor/dedupe state (`schemaVersion`, `latestSeenPubDate`, `seenIds`, `notifiedIds`, ...)
-- `migration/phase0/baseline-metrics.json`: baseline run summary (new jobs, matches, runtime, Telegram sent count)
-- `migration/phase0/state-backups/`: timestamped `state.json` backups captured before baseline run
-- `migration/phase0/state-schema-v0.md`: documented pre-migration state schema
-- `migration/phase8/state.phase8.test.json`: isolated test state used by the Phase 8 harness
-- `migration/phase8/validation-report.json`: Phase 8 validation results and checklist pass/fail details
+- `state.json`: runtime state (`schemaVersion`, `latestSeenPubDate`, `seenIds`, `notifiedIds`, `classificationDecisions`).
+- `migration/phase0/baseline-metrics.json`: baseline summary metrics.
+- `migration/phase0/state-backups/`: timestamped state backups.
+- `migration/phase0/state-schema-v0.md`: documented pre-migration schema snapshot.
+- `migration/phase8/state.phase8.test.json`: isolated state for Phase 8 harness.
+- `migration/phase8/validation-report.json`: Phase 8 check results.
+- `migration/phase9/dist-backups/`: backup copies of previous `dist/` artifacts.
+- `migration/phase9/rollout-report.json`: Phase 9 rollout monitoring report.
 
 ## Notes
 
 - Classification is deterministic-oriented and expects model output beginning with `YES` or `NO`.
-- Telegram failures are logged per message and do not stop the full run.
+- Telegram failures are logged per message and do not abort the run.

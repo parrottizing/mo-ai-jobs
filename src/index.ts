@@ -40,6 +40,7 @@ export type RunSummary = {
   telegramSentCount: number;
   telegramFailedCount: number;
   telegramSkippedCount: number;
+  sentJobIds: string[];
   counters: RunCounters;
 };
 
@@ -237,6 +238,7 @@ function buildRunSummary(
     telegramSentCount: counters.telegram_sent_total,
     telegramFailedCount: counters.telegram_failed_total,
     telegramSkippedCount: alertStats.skipped,
+    sentJobIds: [...alertStats.sentJobIds],
     counters,
   };
 }

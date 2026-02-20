@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-20T10:58:41.399Z",
+  "generatedAt": "2026-02-20T11:10:25.783Z",
   "artifacts": {
     "reportPath": "migration/phase8/validation-report.json",
     "stateFilePath": "migration/phase8/state.phase8.test.json",
@@ -10,7 +10,7 @@
       "command": "npm run typecheck",
       "success": true,
       "exitCode": 0,
-      "durationMs": 695,
+      "durationMs": 621,
       "stdout": "\n> vibe-coder-job-agent@0.1.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
     },
@@ -18,7 +18,7 @@
       "command": "npx tsc",
       "success": true,
       "exitCode": 0,
-      "durationMs": 818,
+      "durationMs": 852,
       "stdout": "",
       "stderr": ""
     }
@@ -26,14 +26,17 @@
   "runResults": {
     "firstRun": {
       "summary": {
-        "startedAt": "2026-02-20T10:58:41.357Z",
-        "finishedAt": "2026-02-20T10:58:41.397Z",
-        "runtimeMs": 40,
+        "startedAt": "2026-02-20T11:10:25.742Z",
+        "finishedAt": "2026-02-20T11:10:25.781Z",
+        "runtimeMs": 39,
         "newJobsCount": 2,
         "matchesCount": 1,
         "telegramSentCount": 1,
         "telegramFailedCount": 0,
         "telegramSkippedCount": 1,
+        "sentJobIds": [
+          "phase8-job-yes"
+        ],
         "counters": {
           "feed_items_total": 2,
           "new_items_total": 2,
@@ -60,14 +63,15 @@
     },
     "secondRun": {
       "summary": {
-        "startedAt": "2026-02-20T10:58:41.398Z",
-        "finishedAt": "2026-02-20T10:58:41.398Z",
+        "startedAt": "2026-02-20T11:10:25.782Z",
+        "finishedAt": "2026-02-20T11:10:25.782Z",
         "runtimeMs": 0,
         "newJobsCount": 0,
         "matchesCount": 0,
         "telegramSentCount": 0,
         "telegramFailedCount": 0,
         "telegramSkippedCount": 0,
+        "sentJobIds": [],
         "counters": {
           "feed_items_total": 2,
           "new_items_total": 0,
@@ -99,8 +103,8 @@
     "runtime_vs_baseline": {
       "status": "pass",
       "baseline": 1073,
-      "current": 40,
-      "delta": -1033,
+      "current": 39,
+      "delta": -1034,
       "message": "Current runtime (ms) is less than or equal to baseline."
     },
     "request_count_vs_baseline": {
