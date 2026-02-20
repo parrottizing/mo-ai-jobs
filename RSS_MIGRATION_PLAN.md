@@ -63,13 +63,13 @@ Generated: 2026-02-19
 - [x] `telegram_failed_total`
 
 ## Phase 8: Validation and Verification
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npx tsc`.
-- [ ] Run `node dist/index.js` with safe/test credentials.
-- [ ] Verify no duplicate alerts across repeated runs with unchanged feed.
-- [ ] Verify matched jobs include external apply links when available.
-- [ ] Verify unmatched jobs do not trigger detail-page fetches.
-- [ ] Compare runtime and request count against baseline.
+- [x] Run `npm run typecheck`.
+- [x] Run `npx tsc`.
+- [x] Run `node dist/index.js` with safe/test credentials.
+- [x] Verify no duplicate alerts across repeated runs with unchanged feed.
+- [x] Verify matched jobs include external apply links when available.
+- [x] Verify unmatched jobs do not trigger detail-page fetches.
+- [x] Compare runtime and request count against baseline.
 
 ## Phase 9: Rollout
 - [ ] Deploy changes with backup of previous build artifacts.

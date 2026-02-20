@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-02-20T10:58:41.399Z",
+  "artifacts": {
+    "reportPath": "migration/phase8/validation-report.json",
+    "stateFilePath": "migration/phase8/state.phase8.test.json",
+    "baselineMetricsPath": "migration/phase0/baseline-metrics.json"
+  },
+  "commandResults": {
+    "typecheck": {
+      "command": "npm run typecheck",
+      "success": true,
+      "exitCode": 0,
+      "durationMs": 695,
+      "stdout": "\n> vibe-coder-job-agent@0.1.0 typecheck\n> tsc --noEmit\n\n",
+      "stderr": ""
+    },
+    "compile": {
+      "command": "npx tsc",
+      "success": true,
+      "exitCode": 0,
+      "durationMs": 818,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "runResults": {
+    "firstRun": {
+      "summary": {
+        "startedAt": "2026-02-20T10:58:41.357Z",
+        "finishedAt": "2026-02-20T10:58:41.397Z",
+        "runtimeMs": 40,
+        "newJobsCount": 2,
+        "matchesCount": 1,
+        "telegramSentCount": 1,
+        "telegramFailedCount": 0,
+        "telegramSkippedCount": 1,
+        "counters": {
+          "feed_items_total": 2,
+          "new_items_total": 2,
+          "classified_yes_total": 1,
+          "enrichment_failures_total": 0,
+          "telegram_sent_total": 1,
+          "telegram_failed_total": 0
+        }
+      },
+      "observation": {
+        "counters": {
+          "total": 5,
+          "feed": 1,
+          "detailTotal": 1,
+          "detailMatched": 1,
+          "detailUnmatched": 0,
+          "classifier": 2,
+          "telegram": 1
+        },
+        "telegramMessages": [
+          "Vibe-coder match found:\nTitle: Senior AI Automation Engineer\nCompany: Mock Labs\nLocation: Remote\nWhy it matched: Qualified based on AI-native profile.\nDetails: https://mock.moaijobs.local/jobs/senior-ai-automation-engineer\nApply: https://careers.example.com/jobs/senior-ai-automation-engineer"
+        ]
+      }
+    },
+    "secondRun": {
+      "summary": {
+        "startedAt": "2026-02-20T10:58:41.398Z",
+        "finishedAt": "2026-02-20T10:58:41.398Z",
+        "runtimeMs": 0,
+        "newJobsCount": 0,
+        "matchesCount": 0,
+        "telegramSentCount": 0,
+        "telegramFailedCount": 0,
+        "telegramSkippedCount": 0,
+        "counters": {
+          "feed_items_total": 2,
+          "new_items_total": 0,
+          "classified_yes_total": 0,
+          "enrichment_failures_total": 0,
+          "telegram_sent_total": 0,
+          "telegram_failed_total": 0
+        }
+      },
+      "observation": {
+        "counters": {
+          "total": 1,
+          "feed": 1,
+          "detailTotal": 0,
+          "detailMatched": 0,
+          "detailUnmatched": 0,
+          "classifier": 0,
+          "telegram": 0
+        },
+        "telegramMessages": []
+      }
+    }
+  },
+  "checks": {
+    "run_with_safe_test_credentials": true,
+    "no_duplicate_alerts_on_unchanged_feed": true,
+    "matched_jobs_include_external_apply_links": true,
+    "unmatched_jobs_do_not_fetch_details": true,
+    "runtime_vs_baseline": {
+      "status": "pass",
+      "baseline": 1073,
+      "current": 40,
+      "delta": -1033,
+      "message": "Current runtime (ms) is less than or equal to baseline."
+    },
+    "request_count_vs_baseline": {
+      "status": "not_available",
+      "baseline": null,
+      "current": 5,
+      "delta": null,
+      "message": "No baseline request count found in migration baseline artifacts."
+    }
+  },
+  "allChecksPassed": false
+}

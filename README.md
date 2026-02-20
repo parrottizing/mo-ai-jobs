@@ -22,6 +22,7 @@ Daily TypeScript agent that scans MoAIJobs for new listings, classifies each rol
 - `src/details.ts`: Headless-browser job detail extraction
 - `src/classifier.ts`: Gemini classification, rate-limit handling, retries
 - `src/telegram.ts`: Telegram alert delivery
+- `src/phase8.ts`: Automated Phase 8 validation harness
 - `dist/`: Compiled JavaScript output
 
 ## Prerequisites
@@ -92,6 +93,13 @@ Phase 0 migration baseline (after `npx tsc`):
 npm run phase0
 ```
 
+Phase 8 validation and verification (runs typecheck + compile + two controlled pipeline runs):
+
+```bash
+npx tsc
+npm run phase8
+```
+
 Optional flags for `dist/phase0.js`:
 
 - `--state-file <path>` (default: `state.json`)
@@ -99,12 +107,20 @@ Optional flags for `dist/phase0.js`:
 - `--backup-dir <path>` (default: `migration/phase0/state-backups`)
 - `--schema-path <path>` (default: `migration/phase0/state-schema-v0.md`)
 
+Optional flags for `dist/phase8.js`:
+
+- `--state-file <path>` (default: `migration/phase8/state.phase8.test.json`)
+- `--report-path <path>` (default: `migration/phase8/validation-report.json`)
+- `--baseline-metrics-path <path>` (default: `migration/phase0/baseline-metrics.json`)
+
 ## Output Files
 
-- `state.json`: stores `lastSeenJobId`
+- `state.json`: stores pipeline cursor/dedupe state (`schemaVersion`, `latestSeenPubDate`, `seenIds`, `notifiedIds`, ...)
 - `migration/phase0/baseline-metrics.json`: baseline run summary (new jobs, matches, runtime, Telegram sent count)
 - `migration/phase0/state-backups/`: timestamped `state.json` backups captured before baseline run
 - `migration/phase0/state-schema-v0.md`: documented pre-migration state schema
+- `migration/phase8/state.phase8.test.json`: isolated test state used by the Phase 8 harness
+- `migration/phase8/validation-report.json`: Phase 8 validation results and checklist pass/fail details
 
 ## Notes
 

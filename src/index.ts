@@ -45,6 +45,7 @@ export type RunSummary = {
 
 export type RunOnceOptions = {
   stateFilePath?: string;
+  fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 };
 
 export async function runOnce(): Promise<void> {
@@ -72,6 +73,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
         `RSS fetch attempt ${attempt}/${maxAttempts} failed: ${error}. Retrying in ${delayMs}ms.`,
       );
     },
+    fetcher: options.fetcher,
   });
   counters.feed_items_total = feedCollection.feedItemsTotal;
 
@@ -104,6 +106,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
       safetyMargin: config.geminiTokenSafetyMargin,
       minDelayMs: config.geminiMinDelayMs,
     },
+    fetcher: options.fetcher,
   });
 
   const matchCount = matchResults.filter((result) => result.match).length;
@@ -111,6 +114,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
 
   const enrichedAlertResults = await enrichPositiveMatches(matchResults, newJobs, {
     allowHeadlessFallback: config.detailEnrichmentHeadlessFallbackEnabled,
+    fetcher: options.fetcher,
   });
   const enrichmentFailureCount = countEnrichmentFailures(enrichedAlertResults);
   counters.enrichment_failures_total = enrichmentFailureCount;
@@ -123,6 +127,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
     botToken: config.telegramBotToken,
     chatId: config.telegramChatId,
     notifiedIds: state.notifiedIds,
+    fetcher: options.fetcher,
   });
   counters.telegram_sent_total = alertStats.sent;
   counters.telegram_failed_total = alertStats.failed;
@@ -308,6 +313,7 @@ async function enrichPositiveMatches(
   feedJobs: FeedJob[],
   options: {
     allowHeadlessFallback: boolean;
+    fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   },
 ): Promise<TelegramAlertResult[]> {
   const jobsById = new Map(feedJobs.map((job) => [job.id, job]));
@@ -334,6 +340,7 @@ async function enrichPositiveMatches(
     try {
       const enrichedJob = await enrichFeedJob(sourceJob, {
         allowHeadlessFallback: options.allowHeadlessFallback,
+        fetcher: options.fetcher,
       });
 
       enrichedResults.push({
