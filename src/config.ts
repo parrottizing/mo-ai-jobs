@@ -12,6 +12,7 @@ export type AppConfig = {
   rssFetchMaxBackoffMs: number;
   classifierDescriptionCharCap: number;
   detailEnrichmentHeadlessFallbackEnabled: boolean;
+  geminiRequestsPerMinute?: number;
   geminiTokensPerMinute?: number;
   geminiTokenSafetyMargin?: number;
   geminiMinDelayMs?: number;
@@ -61,6 +62,7 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
       "DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED",
       DEFAULT_DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED,
     ),
+    geminiRequestsPerMinute: readNumber("GEMINI_REQUESTS_PER_MINUTE"),
     geminiTokensPerMinute: readNumber("GEMINI_TOKENS_PER_MINUTE"),
     geminiTokenSafetyMargin: readNumber("GEMINI_TOKEN_SAFETY_MARGIN"),
     geminiMinDelayMs: readNumber("GEMINI_MIN_DELAY_MS"),

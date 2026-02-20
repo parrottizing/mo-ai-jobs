@@ -28,6 +28,7 @@ export type ClassifyOptions = {
   timeoutMs?: number;
   descriptionCharCap?: number;
   rateLimit?: {
+    requestsPerMinute?: number;
     tokensPerMinute?: number;
     safetyMargin?: number;
     minDelayMs?: number;
@@ -256,52 +257,68 @@ function estimateTokens(text: string): number {
 }
 
 function createRateLimiter(options?: ClassifyOptions["rateLimit"]) {
+  const requestsPerMinute = options?.requestsPerMinute ?? 30;
   const tokensPerMinute = options?.tokensPerMinute ?? 15000;
-  const safetyMargin = options?.safetyMargin ?? 0.6;
+  const safetyMargin = options?.safetyMargin ?? 1;
   const minDelayMs = options?.minDelayMs ?? 0;
-  const effectiveLimit = Math.max(1, Math.floor(tokensPerMinute * safetyMargin));
+  const effectiveRequestLimit = Math.max(1, Math.floor(requestsPerMinute * safetyMargin));
+  const effectiveTokenLimit = Math.max(1, Math.floor(tokensPerMinute * safetyMargin));
 
   let windowStart = Date.now();
+  let requestsUsed = 0;
   let tokensUsed = 0;
   let lastCallAt = 0;
 
   const resetWindow = (now: number) => {
     windowStart = now;
+    requestsUsed = 0;
     tokensUsed = 0;
   };
 
   return {
     async consume(tokensNeeded: number): Promise<void> {
-      const now = Date.now();
-      if (now - windowStart >= 60_000) {
-        resetWindow(now);
-      }
+      const normalizedTokens = Math.max(1, Math.floor(tokensNeeded));
+      const requestIntervalMs = Math.ceil(60_000 / effectiveRequestLimit);
 
-      const requiredIntervalMs = Math.ceil((tokensNeeded / effectiveLimit) * 60_000);
-      if (requiredIntervalMs > 0 && lastCallAt > 0) {
-        const sinceLast = now - lastCallAt;
-        if (sinceLast < requiredIntervalMs) {
-          await sleep(requiredIntervalMs - sinceLast);
+      while (true) {
+        const now = Date.now();
+        if (now - windowStart >= 60_000) {
+          resetWindow(now);
         }
-      }
 
-      if (tokensUsed + tokensNeeded > effectiveLimit) {
-        const waitMs = Math.max(0, windowStart + 60_000 - now);
+        let waitMs = 0;
+        const tokensForWindowCheck = Math.min(normalizedTokens, effectiveTokenLimit);
+
+        if (requestsUsed + 1 > effectiveRequestLimit || tokensUsed + tokensForWindowCheck > effectiveTokenLimit) {
+          waitMs = Math.max(waitMs, Math.max(0, windowStart + 60_000 - now));
+        }
+
+        if (lastCallAt > 0) {
+          const sinceLast = now - lastCallAt;
+          if (sinceLast < requestIntervalMs) {
+            waitMs = Math.max(waitMs, requestIntervalMs - sinceLast);
+          }
+
+          const tokenIntervalMs = Math.ceil((tokensForWindowCheck / effectiveTokenLimit) * 60_000);
+          if (sinceLast < tokenIntervalMs) {
+            waitMs = Math.max(waitMs, tokenIntervalMs - sinceLast);
+          }
+
+          if (minDelayMs > 0 && sinceLast < minDelayMs) {
+            waitMs = Math.max(waitMs, minDelayMs - sinceLast);
+          }
+        }
+
         if (waitMs > 0) {
           await sleep(waitMs);
+          continue;
         }
-        resetWindow(Date.now());
-      }
 
-      if (minDelayMs > 0 && lastCallAt > 0) {
-        const sinceLast = Date.now() - lastCallAt;
-        if (sinceLast < minDelayMs) {
-          await sleep(minDelayMs - sinceLast);
-        }
+        requestsUsed += 1;
+        tokensUsed += tokensForWindowCheck;
+        lastCallAt = Date.now();
+        return;
       }
-
-      tokensUsed += tokensNeeded;
-      lastCallAt = Date.now();
     },
   };
 }

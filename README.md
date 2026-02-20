@@ -47,8 +47,9 @@ RSS_FETCH_MAX_ATTEMPTS=3
 RSS_FETCH_INITIAL_BACKOFF_MS=1000
 RSS_FETCH_MAX_BACKOFF_MS=15000
 CLASSIFIER_DESCRIPTION_CHAR_CAP=4000
+GEMINI_REQUESTS_PER_MINUTE=30
 GEMINI_TOKENS_PER_MINUTE=15000
-GEMINI_TOKEN_SAFETY_MARGIN=0.6
+GEMINI_TOKEN_SAFETY_MARGIN=1
 GEMINI_MIN_DELAY_MS=0
 DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED=false
 ```
@@ -149,4 +150,5 @@ Optional flags for `dist/phase9.js`:
 ## Notes
 
 - Classification is deterministic-oriented and expects model output beginning with `YES` or `NO`.
+- Classifier throttling enforces both request and token budgets per minute.
 - Telegram failures are logged per message and do not abort the run.

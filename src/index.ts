@@ -103,6 +103,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
     apiKey: config.googleApiKey,
     descriptionCharCap: config.classifierDescriptionCharCap,
     rateLimit: {
+      requestsPerMinute: config.geminiRequestsPerMinute,
       tokensPerMinute: config.geminiTokensPerMinute,
       safetyMargin: config.geminiTokenSafetyMargin,
       minDelayMs: config.geminiMinDelayMs,
