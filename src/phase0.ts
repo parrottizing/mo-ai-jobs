@@ -32,6 +32,7 @@ type BaselineMetrics = {
     matchesCount: number;
     runtimeMs: number;
     telegramSentCount: number;
+    requestCount: number;
   };
   runSummary: RunSummary;
 };
@@ -48,7 +49,8 @@ export async function runPhase0(options: Phase0Options = {}): Promise<Phase0Arti
   const stateSchemaDoc = buildStateSchemaDoc(stateFilePath, stateBeforeRun);
   await writeTextFile(schemaPath, stateSchemaDoc);
 
-  const runSummary = await runOnceWithSummary({ stateFilePath });
+  const { fetcher, getRequestCount } = createCountingFetcher();
+  const runSummary = await runOnceWithSummary({ stateFilePath, fetcher });
   const baselinePayload: BaselineMetrics = {
     recordedAt: new Date().toISOString(),
     stateFilePath,
@@ -58,6 +60,7 @@ export async function runPhase0(options: Phase0Options = {}): Promise<Phase0Arti
       matchesCount: runSummary.matchesCount,
       runtimeMs: runSummary.runtimeMs,
       telegramSentCount: runSummary.telegramSentCount,
+      requestCount: getRequestCount(),
     },
     runSummary,
   };
@@ -68,6 +71,30 @@ export async function runPhase0(options: Phase0Options = {}): Promise<Phase0Arti
     stateSchemaPath: schemaPath,
     baselineMetricsPath: metricsPath,
     runSummary,
+  };
+}
+
+type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+function createCountingFetcher(): {
+  fetcher: Fetcher;
+  getRequestCount: () => number;
+} {
+  if (typeof globalThis.fetch !== "function") {
+    throw new Error("Global fetch is not available in this runtime.");
+  }
+
+  const baseFetcher: Fetcher = globalThis.fetch.bind(globalThis);
+  let requestCount = 0;
+
+  const fetcher: Fetcher = async (input, init) => {
+    requestCount += 1;
+    return baseFetcher(input, init);
+  };
+
+  return {
+    fetcher,
+    getRequestCount: () => requestCount,
   };
 }
 
