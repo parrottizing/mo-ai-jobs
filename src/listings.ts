@@ -6,6 +6,18 @@ export type JobListing = {
   url: string;
 };
 
+export type RssRetryEvent = {
+  attempt: number;
+  maxAttempts: number;
+  delayMs: number;
+  error: string;
+};
+
+export type CollectFeedJobsResult = {
+  feedItemsTotal: number;
+  newFeedJobs: FeedJob[];
+};
+
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 type CollectOptions = {
@@ -13,10 +25,17 @@ type CollectOptions = {
   latestSeenPubDate?: string | null;
   seenIds?: string[];
   maxItemsPerRun?: number;
+  rssFetchMaxAttempts?: number;
+  rssFetchInitialBackoffMs?: number;
+  rssFetchMaxBackoffMs?: number;
+  onRssRetry?: (event: RssRetryEvent) => void;
   fetcher?: Fetcher;
 };
 
 const DEFAULT_MAX_ITEMS_PER_RUN = 100;
+const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
+const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
+const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
 
 export async function collectNewJobs(options: CollectOptions): Promise<JobListing[]> {
   const feedJobs = await collectNewFeedJobs(options);
@@ -28,32 +47,96 @@ export async function collectNewJobs(options: CollectOptions): Promise<JobListin
 }
 
 export async function collectNewFeedJobs(options: CollectOptions): Promise<FeedJob[]> {
+  const result = await collectFeedJobs(options);
+  return result.newFeedJobs;
+}
+
+export async function collectFeedJobs(options: CollectOptions): Promise<CollectFeedJobsResult> {
   const {
     rssFeedUrl,
     latestSeenPubDate = null,
     seenIds = [],
     maxItemsPerRun = DEFAULT_MAX_ITEMS_PER_RUN,
+    rssFetchMaxAttempts = DEFAULT_RSS_FETCH_MAX_ATTEMPTS,
+    rssFetchInitialBackoffMs = DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS,
+    rssFetchMaxBackoffMs = DEFAULT_RSS_FETCH_MAX_BACKOFF_MS,
+    onRssRetry,
     fetcher = fetch,
   } = options;
 
-  const response = await fetcher(rssFeedUrl, {
-    headers: {
-      "User-Agent": "vibe-coder-job-agent/0.1",
-      Accept: "application/rss+xml, application/xml, text/xml, */*",
-    },
+  const response = await fetchRssWithRetry(rssFeedUrl, fetcher, {
+    maxAttempts: normalizePositiveInteger(rssFetchMaxAttempts, DEFAULT_RSS_FETCH_MAX_ATTEMPTS),
+    initialBackoffMs: normalizePositiveInteger(
+      rssFetchInitialBackoffMs,
+      DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS,
+    ),
+    maxBackoffMs: normalizePositiveInteger(rssFetchMaxBackoffMs, DEFAULT_RSS_FETCH_MAX_BACKOFF_MS),
+    onRetry: onRssRetry,
   });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: ${response.status} ${response.statusText}`);
-  }
 
   const xml = await response.text();
   const feedItems = parseFeedItems(xml, rssFeedUrl);
-  return selectNewFeedItems(feedItems, {
+  const newFeedJobs = selectNewFeedItems(feedItems, {
     latestSeenPubDate,
     seenIds,
     maxItemsPerRun,
   });
+
+  return {
+    feedItemsTotal: feedItems.length,
+    newFeedJobs,
+  };
+}
+
+type FetchRetryOptions = {
+  maxAttempts: number;
+  initialBackoffMs: number;
+  maxBackoffMs: number;
+  onRetry?: (event: RssRetryEvent) => void;
+};
+
+async function fetchRssWithRetry(
+  rssFeedUrl: string,
+  fetcher: Fetcher,
+  options: FetchRetryOptions,
+): Promise<Response> {
+  const maxAttempts = Math.max(1, options.maxAttempts);
+  const initialBackoffMs = Math.max(1, options.initialBackoffMs);
+  const maxBackoffMs = Math.max(initialBackoffMs, options.maxBackoffMs);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetcher(rssFeedUrl, {
+        headers: {
+          "User-Agent": "vibe-coder-job-agent/0.1",
+          Accept: "application/rss+xml, application/xml, text/xml, */*",
+        },
+      });
+
+      if (response.ok) {
+        return response;
+      }
+
+      throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      if (attempt >= maxAttempts) {
+        throw new Error(
+          `Failed to fetch RSS feed ${rssFeedUrl} after ${maxAttempts} attempt(s): ${formatError(error)}`,
+        );
+      }
+
+      const delayMs = calculateBackoffDelayMs(attempt, initialBackoffMs, maxBackoffMs);
+      options.onRetry?.({
+        attempt,
+        maxAttempts,
+        delayMs,
+        error: formatError(error),
+      });
+      await sleep(delayMs);
+    }
+  }
+
+  throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: exhausted retry attempts.`);
 }
 
 export function parseFeedItems(xml: string, feedUrl: string): FeedJob[] {
@@ -447,6 +530,30 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/g, "'")
     .replace(/&#x27;/gi, "'");
+}
+
+function calculateBackoffDelayMs(attempt: number, initialBackoffMs: number, maxBackoffMs: number): number {
+  const exponent = Math.max(0, attempt - 1);
+  const retryDelay = initialBackoffMs * 2 ** exponent;
+  return Math.min(maxBackoffMs, retryDelay);
+}
+
+function normalizePositiveInteger(value: number, fallbackValue: number): number {
+  if (!Number.isInteger(value) || value <= 0) {
+    return fallbackValue;
+  }
+  return value;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return String(error);
 }
 
 function escapeRegExp(value: string): string {

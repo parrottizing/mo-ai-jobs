@@ -1,7 +1,7 @@
 import { loadConfig } from "./config";
 import { classifyJobs, type JobMatchResult } from "./classifier";
 import { enrichFeedJob } from "./details";
-import { collectNewFeedJobs } from "./listings";
+import { collectFeedJobs } from "./listings";
 import type { EnrichedFeedJob, FeedJob } from "./rss-models";
 import {
   loadState,
@@ -22,6 +22,15 @@ export * from "./telegram";
 
 const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
+export type RunCounters = {
+  feed_items_total: number;
+  new_items_total: number;
+  classified_yes_total: number;
+  enrichment_failures_total: number;
+  telegram_sent_total: number;
+  telegram_failed_total: number;
+};
+
 export type RunSummary = {
   startedAt: string;
   finishedAt: string;
@@ -31,6 +40,7 @@ export type RunSummary = {
   telegramSentCount: number;
   telegramFailedCount: number;
   telegramSkippedCount: number;
+  counters: RunCounters;
 };
 
 export type RunOnceOptions = {
@@ -45,25 +55,41 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   const config = loadConfig(options.stateFilePath);
   const state = await loadState(config.stateFilePath);
   const startedAt = new Date();
+  const counters = createRunCounters();
 
   log(`Run started (${startedAt.toISOString()})`);
 
-  const newFeedJobs = await collectNewFeedJobs({
+  const feedCollection = await collectFeedJobs({
     rssFeedUrl: config.rssFeedUrl,
     latestSeenPubDate: state.latestSeenPubDate,
     seenIds: state.seenIds,
     maxItemsPerRun: config.maxFeedItemsPerRun,
+    rssFetchMaxAttempts: config.rssFetchMaxAttempts,
+    rssFetchInitialBackoffMs: config.rssFetchInitialBackoffMs,
+    rssFetchMaxBackoffMs: config.rssFetchMaxBackoffMs,
+    onRssRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+      log(
+        `RSS fetch attempt ${attempt}/${maxAttempts} failed: ${error}. Retrying in ${delayMs}ms.`,
+      );
+    },
   });
+  counters.feed_items_total = feedCollection.feedItemsTotal;
+
+  const newFeedJobs = feedCollection.newFeedJobs;
   const newJobs = dedupeFeedJobsById(newFeedJobs);
+  counters.new_items_total = newJobs.length;
 
   log(`New jobs found: ${newJobs.length}`);
 
   if (newJobs.length === 0) {
-    const summary = buildRunSummary(startedAt, new Date(), 0, 0, {
+    const alertStats: TelegramAlertStats = {
       sent: 0,
       failed: 0,
       skipped: 0,
-    });
+      sentJobIds: [],
+    };
+    const summary = buildRunSummary(startedAt, new Date(), counters, alertStats);
+    logRunCounters(counters);
     log(`Run completed. New jobs: 0. Matches: 0. Runtime: ${summary.runtimeMs}ms.`);
     return summary;
   }
@@ -81,10 +107,13 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   });
 
   const matchCount = matchResults.filter((result) => result.match).length;
+  counters.classified_yes_total = matchCount;
+
   const enrichedAlertResults = await enrichPositiveMatches(matchResults, newJobs, {
     allowHeadlessFallback: config.detailEnrichmentHeadlessFallbackEnabled,
   });
   const enrichmentFailureCount = countEnrichmentFailures(enrichedAlertResults);
+  counters.enrichment_failures_total = enrichmentFailureCount;
 
   if (enrichmentFailureCount > 0) {
     log(`Detail enrichment fallback used for ${enrichmentFailureCount} matched job(s).`);
@@ -93,21 +122,26 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   const alertStats = await sendTelegramAlerts(enrichedAlertResults, {
     botToken: config.telegramBotToken,
     chatId: config.telegramChatId,
+    notifiedIds: state.notifiedIds,
   });
+  counters.telegram_sent_total = alertStats.sent;
+  counters.telegram_failed_total = alertStats.failed;
 
   await saveState(config.stateFilePath, {
     ...state,
     lastSeenJobId: newJobs[0]?.id ?? state.lastSeenJobId,
     latestSeenPubDate: getLatestSeenPubDate(state.latestSeenPubDate, newJobs),
     seenIds: mergeSeenIds(state.seenIds, newJobs.map((job) => job.id)),
+    notifiedIds: mergeSeenIds(state.notifiedIds, alertStats.sentJobIds),
     classificationDecisions: mergeClassificationDecisions(
       state.classificationDecisions,
       matchResults,
     ),
   });
 
-  const summary = buildRunSummary(startedAt, new Date(), newJobs.length, matchCount, alertStats);
+  const summary = buildRunSummary(startedAt, new Date(), counters, alertStats);
 
+  logRunCounters(counters);
   log(`Telegram alerts: sent ${alertStats.sent}, failed ${alertStats.failed}, skipped ${alertStats.skipped}.`);
   log(`Run completed. New jobs: ${newJobs.length}. Matches: ${matchCount}. Runtime: ${summary.runtimeMs}ms.`);
   return summary;
@@ -186,20 +220,35 @@ function parseArgs(argv: string[]): { schedule?: string } {
 function buildRunSummary(
   startedAt: Date,
   finishedAt: Date,
-  newJobsCount: number,
-  matchesCount: number,
+  counters: RunCounters,
   alertStats: TelegramAlertStats,
 ): RunSummary {
   return {
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
     runtimeMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
-    newJobsCount,
-    matchesCount,
-    telegramSentCount: alertStats.sent,
-    telegramFailedCount: alertStats.failed,
+    newJobsCount: counters.new_items_total,
+    matchesCount: counters.classified_yes_total,
+    telegramSentCount: counters.telegram_sent_total,
+    telegramFailedCount: counters.telegram_failed_total,
     telegramSkippedCount: alertStats.skipped,
+    counters,
   };
+}
+
+function createRunCounters(): RunCounters {
+  return {
+    feed_items_total: 0,
+    new_items_total: 0,
+    classified_yes_total: 0,
+    enrichment_failures_total: 0,
+    telegram_sent_total: 0,
+    telegram_failed_total: 0,
+  };
+}
+
+function logRunCounters(counters: RunCounters): void {
+  log(`Run summary counters: ${JSON.stringify(counters)}`);
 }
 
 function getLatestSeenPubDate(currentValue: string | null, jobs: Array<{ pubDate: string | null }>): string | null {

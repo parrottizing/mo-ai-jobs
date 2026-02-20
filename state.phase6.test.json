@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "lastSeenJobId": "https://www.moaijobs.com/job/applied-ai-engineer-multimodal-transformers-kodiak-5602",
+  "latestSeenPubDate": "2026-02-20T02:41:19.000Z",
+  "seenIds": [
+    "https://www.moaijobs.com/job/applied-ai-engineer-multimodal-transformers-kodiak-5602",
+    "https://www.moaijobs.com/job/staff-data-scientist-mission-lane-9773",
+    "https://www.moaijobs.com/job/machine-learning-engineer-grab-1313",
+    "https://www.moaijobs.com/job/staff-data-engineer-visa-7220",
+    "https://www.moaijobs.com/job/principal-machine-learning-engineer-embodied-ai-and-smart-npcs-roblox-3567"
+  ],
+  "notifiedIds": [],
+  "classificationDecisions": [
+    {
+      "jobId": "https://www.moaijobs.com/job/applied-ai-engineer-multimodal-transformers-kodiak-5602",
+      "match": false,
+      "rationale": "Not qualified for this role.",
+      "rawResponse": "NO",
+      "decidedAt": "2026-02-20T09:13:53.949Z",
+      "model": "gemma-3-27b-it",
+      "promptTokens": 1641,
+      "descriptionChars": 6343,
+      "descriptionCharsUsed": 4000,
+      "descriptionWasClipped": true
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/staff-data-scientist-mission-lane-9773",
+      "match": false,
+      "rationale": "Not qualified for this role.",
+      "rawResponse": "NO",
+      "decidedAt": "2026-02-20T09:14:08.950Z",
+      "model": "gemma-3-27b-it",
+      "promptTokens": 1625,
+      "descriptionChars": 6309,
+      "descriptionCharsUsed": 3999,
+      "descriptionWasClipped": true
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/machine-learning-engineer-grab-1313",
+      "match": false,
+      "rationale": "Not qualified for this role.",
+      "rawResponse": "NO",
+      "decidedAt": "2026-02-20T09:14:16.089Z",
+      "model": "gemma-3-27b-it",
+      "promptTokens": 1603,
+      "descriptionChars": 3933,
+      "descriptionCharsUsed": 3933,
+      "descriptionWasClipped": false
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/staff-data-engineer-visa-7220",
+      "match": false,
+      "rationale": "Not qualified for this role.",
+      "rawResponse": "NO",
+      "decidedAt": "2026-02-20T09:14:29.296Z",
+      "model": "gemma-3-27b-it",
+      "promptTokens": 1623,
+      "descriptionChars": 5390,
+      "descriptionCharsUsed": 4000,
+      "descriptionWasClipped": true
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/principal-machine-learning-engineer-embodied-ai-and-smart-npcs-roblox-3567",
+      "match": false,
+      "rationale": "Not qualified for this role.",
+      "rawResponse": "NO",
+      "decidedAt": "2026-02-20T09:14:37.660Z",
+      "model": "gemma-3-27b-it",
+      "promptTokens": 1663,
+      "descriptionChars": 4939,
+      "descriptionCharsUsed": 4000,
+      "descriptionWasClipped": true
+    }
+  ]
+}

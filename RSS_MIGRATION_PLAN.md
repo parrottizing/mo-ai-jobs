@@ -46,21 +46,21 @@ Generated: 2026-02-19
 - [x] Keep headless extraction as optional fallback path behind a config flag.
 
 ## Phase 6: Telegram Message Upgrade
-- [ ] Update message format to include both `Details` (MoAIJobs URL) and `Apply` (external URL when available).
-- [ ] Include key context fields (title, company, location, short rationale).
-- [ ] Ensure idempotent send behavior using `notifiedIds`.
-- [ ] Preserve failure handling and retry behavior for Telegram API calls.
+- [x] Update message format to include both `Details` (MoAIJobs URL) and `Apply` (external URL when available).
+- [x] Include key context fields (title, company, location, short rationale).
+- [x] Ensure idempotent send behavior using `notifiedIds`.
+- [x] Preserve failure handling and retry behavior for Telegram API calls.
 
 ## Phase 7: Reliability and Observability
-- [ ] Add retry/backoff for RSS fetch failures.
-- [ ] Do not advance state cursor on failed runs.
-- [ ] Add run summary logging with counters:
-- [ ] `feed_items_total`
-- [ ] `new_items_total`
-- [ ] `classified_yes_total`
-- [ ] `enrichment_failures_total`
-- [ ] `telegram_sent_total`
-- [ ] `telegram_failed_total`
+- [x] Add retry/backoff for RSS fetch failures.
+- [x] Do not advance state cursor on failed runs.
+- [x] Add run summary logging with counters:
+- [x] `feed_items_total`
+- [x] `new_items_total`
+- [x] `classified_yes_total`
+- [x] `enrichment_failures_total`
+- [x] `telegram_sent_total`
+- [x] `telegram_failed_total`
 
 ## Phase 8: Validation and Verification
 - [ ] Run `npm run typecheck`.

@@ -8,6 +8,9 @@ export type AppConfig = {
   listingsUrl: string;
   rssFeedUrl: string;
   maxFeedItemsPerRun: number;
+  rssFetchMaxAttempts: number;
+  rssFetchInitialBackoffMs: number;
+  rssFetchMaxBackoffMs: number;
   classifierDescriptionCharCap: number;
   detailEnrichmentHeadlessFallbackEnabled: boolean;
   geminiTokensPerMinute?: number;
@@ -19,6 +22,9 @@ const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID
 const DEFAULT_LISTINGS_URL = "https://www.moaijobs.com/";
 const DEFAULT_RSS_FEED_URL = "https://www.moaijobs.com/ai-jobs.rss";
 const DEFAULT_MAX_FEED_ITEMS_PER_RUN = 100;
+const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
+const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
+const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
 const DEFAULT_CLASSIFIER_DESCRIPTION_CHAR_CAP = 4_000;
 const DEFAULT_DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED = false;
 
@@ -30,6 +36,15 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     throw new Error(`Missing required env vars: ${missing.join(", ")}`);
   }
 
+  const rssFetchInitialBackoffMs = readPositiveInteger(
+    "RSS_FETCH_INITIAL_BACKOFF_MS",
+    DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS,
+  );
+  const rssFetchMaxBackoffMs = Math.max(
+    rssFetchInitialBackoffMs,
+    readPositiveInteger("RSS_FETCH_MAX_BACKOFF_MS", DEFAULT_RSS_FETCH_MAX_BACKOFF_MS),
+  );
+
   return {
     googleApiKey: process.env.GOOGLE_API_KEY as string,
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN as string,
@@ -38,6 +53,9 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     listingsUrl: process.env.LISTINGS_URL?.trim() || DEFAULT_LISTINGS_URL,
     rssFeedUrl: process.env.RSS_FEED_URL?.trim() || DEFAULT_RSS_FEED_URL,
     maxFeedItemsPerRun: readPositiveInteger("RSS_MAX_ITEMS_PER_RUN", DEFAULT_MAX_FEED_ITEMS_PER_RUN),
+    rssFetchMaxAttempts: readPositiveInteger("RSS_FETCH_MAX_ATTEMPTS", DEFAULT_RSS_FETCH_MAX_ATTEMPTS),
+    rssFetchInitialBackoffMs,
+    rssFetchMaxBackoffMs,
     classifierDescriptionCharCap: readPositiveInteger(
       "CLASSIFIER_DESCRIPTION_CHAR_CAP",
       DEFAULT_CLASSIFIER_DESCRIPTION_CHAR_CAP,

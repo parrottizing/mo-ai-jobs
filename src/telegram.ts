@@ -6,12 +6,14 @@ export type TelegramOptions = {
   chatId: string;
   timeoutMs?: number;
   fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  notifiedIds?: string[];
 };
 
 export type TelegramAlertStats = {
   sent: number;
   failed: number;
   skipped: number;
+  sentJobIds: string[];
 };
 
 export type TelegramAlertResult = JobMatchResult & {
@@ -24,10 +26,20 @@ export async function sendTelegramAlerts(
   results: TelegramAlertResult[],
   options: TelegramOptions,
 ): Promise<TelegramAlertStats> {
-  const stats: TelegramAlertStats = { sent: 0, failed: 0, skipped: 0 };
+  const stats: TelegramAlertStats = { sent: 0, failed: 0, skipped: 0, sentJobIds: [] };
+  const previouslyNotified = new Set(
+    (options.notifiedIds ?? []).map((id) => id.trim()).filter((id) => id.length > 0),
+  );
+  const sentInRun = new Set<string>();
 
   for (const result of results) {
     if (!result.match) {
+      stats.skipped += 1;
+      continue;
+    }
+
+    const jobId = result.job.id.trim();
+    if (!jobId || previouslyNotified.has(jobId) || sentInRun.has(jobId)) {
       stats.skipped += 1;
       continue;
     }
@@ -37,6 +49,8 @@ export async function sendTelegramAlerts(
     try {
       await sendTelegramMessage(message, options);
       stats.sent += 1;
+      stats.sentJobIds.push(jobId);
+      sentInRun.add(jobId);
     } catch (error) {
       stats.failed += 1;
       console.error("Telegram alert failed:", error);
@@ -47,14 +61,46 @@ export async function sendTelegramAlerts(
 }
 
 function formatTelegramMessage(result: TelegramAlertResult): string {
-  const company = result.job.company ?? "Unknown";
-  const link = result.enrichedJob?.applyUrl ?? result.job.detailUrl;
+  const company = normalizeTextField(result.job.company);
+  const location = normalizeTextField(result.job.location);
+  const detailsUrl = normalizeUrl(result.job.detailUrl) ?? "Unknown";
+  const applyUrlCandidate = normalizeUrl(result.enrichedJob?.applyUrl);
+  const applyUrl =
+    applyUrlCandidate && applyUrlCandidate !== detailsUrl ? applyUrlCandidate : detailsUrl;
+
   return [
     "Vibe-coder match found:",
     `Title: ${result.job.title}`,
     `Company: ${company}`,
-    `Link: ${link}`,
+    `Location: ${location}`,
+    `Why it matched: ${shortenRationale(result.rationale)}`,
+    `Details: ${detailsUrl}`,
+    `Apply: ${applyUrl}`,
   ].join("\n");
+}
+
+function normalizeTextField(value: string | null | undefined): string {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : "Unknown";
+}
+
+function normalizeUrl(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function shortenRationale(value: string): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return "Matched AI-native role criteria.";
+  }
+
+  const maxLength = 160;
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
 async function sendTelegramMessage(text: string, options: TelegramOptions): Promise<void> {
