@@ -78,7 +78,8 @@ export async function classifyJob(
 
 function buildPrompt(job: ClassifierJob, promptInput: PromptInput): string {
   return [
-    "You are evaluating if a candidate is qualified for a job posting.",
+    "You are a strict hiring screener. Minimize false positives.",
+    "If uncertain, answer NO.",
     "",
     "CANDIDATE PROFILE:",
     "- 3.5 years of deep AI experience, using approximately 200 different AI services.",
@@ -86,7 +87,10 @@ function buildPrompt(job: ClassifierJob, promptInput: PromptInput): string {
     "- Proficient with AI coding tools: Cursor, Claude Code, various IDE and CLI AI agents.",
     "- Strong understanding of context engineering and prompt engineering.",
     "- KEY CONSTRAINT: Not a traditional developer. Cannot write code without AI assistance.",
-    "- Qualified for roles that embrace AI-driven development and don't strictly require manual coding interviews or deep syntax knowledge.",
+    "- Qualified for roles that embrace AI-driven development and don't strictly require independent manual coding ability.",
+    "",
+    "USER PREFERENCES:",
+    "- Reject expired or closed job postings.",
     "",
     "JOB POSTING:",
     `Title: ${job.title}`,
@@ -95,8 +99,19 @@ function buildPrompt(job: ClassifierJob, promptInput: PromptInput): string {
     `Tags: ${promptInput.tagsLine}`,
     `Description: ${promptInput.description}`,
     "",
-    "Question: Is this candidate qualified for this job?",
-    "Answer with one word only: YES or NO.",
+    "HARD-FAIL RULES (any one => NO):",
+    "1) Mandatory credential, license, or degree missing from the profile (e.g., JD, bar, MD, PE).",
+    "2) Role requires independent manual coding ability without AI assistance.",
+    "3) Core domain mismatch requiring specialized background not shown in the profile.",
+    "4) Posting is expired or closed.",
+    "",
+    "YES RULE:",
+    "- Return YES only if no hard-fail rule is triggered and the role is clearly AI-native and compatible with AI-assisted delivery.",
+    "",
+    "OUTPUT FORMAT (exactly 3 lines):",
+    "Line 1: YES or NO",
+    "Line 2: REASON_CODES: <comma-separated from: GOOD_AI_NATIVE_FIT, MISSING_REQUIRED_CREDENTIAL, MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH, EXPIRED_OR_CLOSED, INSUFFICIENT_EVIDENCE>",
+    "Line 3: EVIDENCE: <up to two short snippets from the job text>",
   ].join("\n");
 }
 
@@ -358,17 +373,99 @@ function extractGeminiText(data: GeminiResponse): string | null {
 }
 
 function parseClassification(text: string): { match: boolean; rationale: string } | null {
-  const normalized = text.trim().toUpperCase();
-
-  if (normalized.startsWith("YES")) {
-    return { match: true, rationale: "Qualified based on AI-native profile." };
+  const normalized = text.trim();
+  const verdictMatch = /^\s*(YES|NO)\b/i.exec(normalized);
+  if (!verdictMatch) {
+    return null;
   }
 
-  if (normalized.startsWith("NO")) {
-    return { match: false, rationale: "Not qualified for this role." };
+  const match = verdictMatch[1].toUpperCase() === "YES";
+  const reasonCodes = parseReasonCodes(normalized);
+  const evidence = parseEvidence(normalized);
+
+  if (reasonCodes.length === 0 && !evidence) {
+    return {
+      match,
+      rationale: match ? "Qualified based on AI-native profile." : "Not qualified for this role.",
+    };
   }
 
-  return null;
+  const defaultCode = match ? "GOOD_AI_NATIVE_FIT" : "INSUFFICIENT_EVIDENCE";
+  const codes = reasonCodes.length > 0 ? reasonCodes : [defaultCode];
+  const rationale = [
+    `Reason codes: ${codes.join(", ")}`,
+    evidence ? `Evidence: ${evidence}` : null,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" ");
+
+  return { match, rationale };
+}
+
+function parseReasonCodes(text: string): string[] {
+  const line = findTaggedLineValue(text, "REASON_CODES");
+  if (!line) {
+    return [];
+  }
+
+  const allowed = new Set([
+    "GOOD_AI_NATIVE_FIT",
+    "MISSING_REQUIRED_CREDENTIAL",
+    "MANUAL_CODING_REQUIRED",
+    "DOMAIN_MISMATCH",
+    "EXPIRED_OR_CLOSED",
+    "INSUFFICIENT_EVIDENCE",
+  ]);
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const token of line.split(",")) {
+    const value = token
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9_ ]+/g, "")
+      .replace(/\s+/g, "_");
+
+    if (!value || seen.has(value) || !allowed.has(value)) {
+      continue;
+    }
+
+    seen.add(value);
+    normalized.push(value);
+  }
+
+  return normalized;
+}
+
+function parseEvidence(text: string): string | null {
+  const line = findTaggedLineValue(text, "EVIDENCE");
+  if (!line) {
+    return null;
+  }
+
+  const normalized = line.replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const maxLength = 220;
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function findTaggedLineValue(text: string, tag: string): string | null {
+  const escapedTag = escapeRegExp(tag);
+  const regex = new RegExp(`^\\s*${escapedTag}\\s*:\\s*(.+)$`, "im");
+  const match = regex.exec(text);
+  return match?.[1]?.trim() ?? null;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 type GeminiResponse = {
