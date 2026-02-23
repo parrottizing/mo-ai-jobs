@@ -8,6 +8,7 @@ dist/
 
 # Local agent state / debug artifacts
 state.json
+state.backup.*.json
 migration/phase8/state.phase8.test.json
 
 # Local tool workspace
