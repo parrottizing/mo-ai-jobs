@@ -61,21 +61,20 @@ export async function sendTelegramAlerts(
 }
 
 function formatTelegramMessage(result: TelegramAlertResult): string {
-  const company = normalizeTextField(result.job.company);
-  const location = normalizeTextField(result.job.location);
+  const company = escapeHtml(normalizeTextField(result.job.company));
+  const location = escapeHtml(normalizeTextField(result.job.location));
+  const title = escapeHtml(result.job.title);
   const detailsUrl = normalizeUrl(result.job.detailUrl) ?? "Unknown";
   const applyUrlCandidate = normalizeUrl(result.enrichedJob?.applyUrl);
   const applyUrl =
     applyUrlCandidate && applyUrlCandidate !== detailsUrl ? applyUrlCandidate : detailsUrl;
 
   return [
-    "Vibe-coder match found:",
-    `Title: ${result.job.title}`,
-    `Company: ${company}`,
-    `Location: ${location}`,
-    `Why it matched: ${shortenRationale(result.rationale)}`,
-    `Details: ${detailsUrl}`,
-    `Apply: ${applyUrl}`,
+    `<b>Title:</b> <i>${title}</i>`,
+    `<b>Company:</b> <i>${company}</i>`,
+    `<b>Location:</b> <i>${location}</i>`,
+    `<a href="${detailsUrl}">Details</a>`,
+    `<a href="${applyUrl}">Apply</a>`,
   ].join("\n");
 }
 
@@ -103,6 +102,10 @@ function shortenRationale(value: string): string {
   return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 async function sendTelegramMessage(text: string, options: TelegramOptions): Promise<void> {
   const fetcher = options.fetcher ?? fetch;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
@@ -120,6 +123,7 @@ async function sendTelegramMessage(text: string, options: TelegramOptions): Prom
       body: JSON.stringify({
         chat_id: options.chatId,
         text,
+        parse_mode: "HTML",
       }),
       signal: controller.signal,
     });
