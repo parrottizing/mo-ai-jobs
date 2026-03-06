@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-03-03T14:45:54.823Z",
+  "options": {
+    "stateFilePath": "state.json",
+    "gapMinutes": 20,
+    "limit": 5,
+    "fetchConcurrency": 8,
+    "fetchTimeoutMs": 1,
+    "model": "gemma-3-27b-it",
+    "descriptionCharCap": 20000,
+    "geminiTimeoutMs": 90000
+  },
+  "sourceWindow": {
+    "startedAt": "2026-03-02T04:32:49.543Z",
+    "finishedAt": "2026-03-02T05:14:12.882Z",
+    "windowDurationMinutes": 41.39,
+    "selectedJobs": 398
+  },
+  "summary": {
+    "selectedJobs": 5,
+    "fetchedJobs": 0,
+    "fetchFailures": 5,
+    "classifiedJobs": 0,
+    "changedVerdicts": 0,
+    "changedToYes": 0,
+    "changedToNo": 0,
+    "oldYes": 0,
+    "oldNo": 0,
+    "newYes": 0,
+    "newNo": 0
+  },
+  "fetchFailures": [
+    {
+      "jobId": "https://www.moaijobs.com/job/machine-learning-engineer-faculty-2456",
+      "decidedAt": "2026-03-02T05:13:58.843Z",
+      "error": "This operation was aborted"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/staff-data-engineer-visa-1913",
+      "decidedAt": "2026-03-02T05:14:05.897Z",
+      "error": "This operation was aborted"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/intern-value-engineering-ai-management-consulting-value-engineering-french-market-celonis-8601",
+      "decidedAt": "2026-03-02T05:14:08.068Z",
+      "error": "This operation was aborted"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-research-scientist-mongodb-4870",
+      "decidedAt": "2026-03-02T05:14:10.628Z",
+      "error": "This operation was aborted"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-scientist-grabmaps-grab-1155",
+      "decidedAt": "2026-03-02T05:14:12.882Z",
+      "error": "This operation was aborted"
+    }
+  ],
+  "comparisons": []
+}

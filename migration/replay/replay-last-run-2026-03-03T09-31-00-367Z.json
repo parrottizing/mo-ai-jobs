@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-03-03T09:31:00.367Z",
+  "options": {
+    "stateFilePath": "state.json",
+    "gapMinutes": 20,
+    "limit": 3,
+    "fetchConcurrency": 3,
+    "model": "gemma-3-27b-it",
+    "descriptionCharCap": 20000
+  },
+  "sourceWindow": {
+    "startedAt": "2026-03-02T04:32:49.543Z",
+    "finishedAt": "2026-03-02T05:14:12.882Z",
+    "windowDurationMinutes": 41.39,
+    "selectedJobs": 398
+  },
+  "summary": {
+    "selectedJobs": 3,
+    "fetchedJobs": 3,
+    "fetchFailures": 0,
+    "classifiedJobs": 3,
+    "changedVerdicts": 0,
+    "changedToYes": 0,
+    "changedToNo": 0,
+    "oldYes": 0,
+    "oldNo": 3,
+    "newYes": 0,
+    "newNo": 3
+  },
+  "fetchFailures": [],
+  "comparisons": [
+    {
+      "jobId": "https://www.moaijobs.com/job/intern-value-engineering-ai-management-consulting-value-engineering-french-market-celonis-8601",
+      "title": "Intern Value Engineering AI & Management Consulting (Value Engineering French Market)",
+      "company": "Celonis",
+      "location": "Paris, FR",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Knowledge in SQL or related database query languages\" , \"Analyze data from our customers to increase transparency in business processes\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Experience in consulting and highly interested in Data Analytics\" and \"Student in the field of Technology & Management, Industrial/Business Engineering, Business Informatics, Business Administration, Computer Science...",
+      "oldDecidedAt": "2026-03-02T05:14:08.068Z",
+      "newDecidedAt": "2026-03-03T09:30:36.434Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-research-scientist-mongodb-4870",
+      "title": "Senior Research Scientist",
+      "company": "MongoDB",
+      "location": "Sydney, NSW, AU",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "ADVANCED_DEGREE_REQUIRED",
+        "MISSING_REQUIRED_CREDENTIAL"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Ph.D. in Computer Science, Computer Engineering, or a closely related field with a specialization in Machine Learning\" , \"Proven track record of impactful research publications in top-tier Machine Learning conference...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, ADVANCED_DEGREE_REQUIRED, MISSING_REQUIRED_CREDENTIAL Evidence: \"Qualifications Ph.D. in Computer Science, Computer Engineering, or a closely related field with a specialization in Machine Learning\" , \"Proven track record of impactful research publications in top-tier Machine Lear...",
+      "oldDecidedAt": "2026-03-02T05:14:10.628Z",
+      "newDecidedAt": "2026-03-03T09:30:46.742Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-scientist-grabmaps-grab-1155",
+      "title": "Senior Data Scientist (GrabMaps)",
+      "company": "Grab",
+      "location": "Singapore, SG",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "ADVANCED_DEGREE_REQUIRED",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Proficiency in deep learning frameworks (TensorFlow, PyTorch) and deployment tools (ONNX, tf-serving, TorchServe, Triton Inference Server etc.) - Solid software engineering skills in Python/Spark\"",
+      "newRationale": "Reason codes: ADVANCED_DEGREE_REQUIRED, MISSING_REQUIRED_EXPERIENCE Evidence: \"Ph.D. in Computer Science, Electrical/Computer Engineering, Operations Research, or a related field, or Masters with at least 2 year of equivalent practical experience applying advanced machine learning methods to re...",
+      "oldDecidedAt": "2026-03-02T05:14:12.882Z",
+      "newDecidedAt": "2026-03-03T09:31:00.366Z"
+    }
+  ]
+}

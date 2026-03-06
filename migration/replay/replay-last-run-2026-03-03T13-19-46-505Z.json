@@ -1,0 +1,652 @@
+{
+  "generatedAt": "2026-03-03T13:19:46.505Z",
+  "options": {
+    "stateFilePath": "state.json",
+    "gapMinutes": 20,
+    "limit": 30,
+    "fetchConcurrency": 8,
+    "model": "gemma-3-27b-it",
+    "descriptionCharCap": 20000
+  },
+  "sourceWindow": {
+    "startedAt": "2026-03-02T04:32:49.543Z",
+    "finishedAt": "2026-03-02T05:14:12.882Z",
+    "windowDurationMinutes": 41.39,
+    "selectedJobs": 398
+  },
+  "summary": {
+    "selectedJobs": 30,
+    "fetchedJobs": 30,
+    "fetchFailures": 0,
+    "classifiedJobs": 30,
+    "changedVerdicts": 1,
+    "changedToYes": 0,
+    "changedToNo": 1,
+    "oldYes": 1,
+    "oldNo": 29,
+    "newYes": 0,
+    "newNo": 30
+  },
+  "fetchFailures": [],
+  "comparisons": [
+    {
+      "jobId": "https://www.moaijobs.com/job/sr-director-data-science-visa-8418",
+      "title": "Sr. Director, Data Science",
+      "company": "Visa",
+      "location": "Atlanta, GA, US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE",
+        "SENIORITY_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Expertise with one or more data analytics/programming tools such as R/Python\" , \"Demonstrated knowledge of software development, MLOps or data product development\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE, SENIORITY_MISMATCH Evidence: \"Essential Functions: Lead data science team...Experience building and managing teams of data scientists\" , \"Basic Qualifications: 12 or more years of work experience with a Bachelor’s Degree\"",
+      "oldDecidedAt": "2026-03-02T05:12:02.968Z",
+      "newDecidedAt": "2026-03-03T13:11:30.464Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/manager-technical-program-management-ai-studio-and-gemini-api-deepmind-7591",
+      "title": "Manager, Technical Program Management, AI Studio and Gemini API",
+      "company": "DeepMind",
+      "location": "Mountain View, California, US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "SENIORITY_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Desire to continue hands on delivery contributing to the most critical technical challenges.\" and \"Technical degree or advanced working knowledge. Industry experience to partner on technical strategy.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, SENIORITY_MISMATCH Evidence: \"As the Technical Program Management Lead...you will build and lead a high-performing team...\" , \"Proven experience in building and leading technical teams within a startup or high-growth environment.\"",
+      "oldDecidedAt": "2026-03-02T05:12:07.337Z",
+      "newDecidedAt": "2026-03-03T13:11:46.737Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-machine-learning-engineer-vlm-llm-evaluation-waymo-9115",
+      "title": "Senior Machine Learning Engineer – VLM/LLM Evaluation",
+      "company": "Waymo",
+      "location": "Mountain View, CA, US, New York, NY, US, Seattle, WA, US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Proficient programming skills (eg: Python, C/C++)\" , \"Proficiency and in-depth knowledge of the inner workings of an ML framework (e.g. Pytorch, JAX, Tensorflow)\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Experience in ML engineering and applied Deep Learning\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:12:09.796Z",
+      "newDecidedAt": "2026-03-03T13:11:57.460Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/principal-ml-engineer-app-sw-wayve-4742",
+      "title": "Principal ML Engineer, App SW",
+      "company": "Wayve",
+      "location": "DE",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "SENIORITY_MISMATCH",
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Proficient in Python and other relevant languages (e.g. C++ and CUDA) and ML frameworks (esp. PyTorch), with a solid foundation in software engineering practices.\" , \"Essential - Extensive and proven track record of...",
+      "newRationale": "Reason codes: SENIORITY_MISMATCH, FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Essential Extensive and proven track record of shipping deep learning systems to production.\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:12:12.401Z",
+      "newDecidedAt": "2026-03-03T13:12:12.693Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/ml-engineering-manager-app-sw-wayve-356",
+      "title": "ML Engineering Manager, App SW",
+      "company": "Wayve",
+      "location": "DE",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "SENIORITY_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Essential - A strong background in robotics and autonomy, with experience building and deploying systems that operate in real-world environments.\" and \"Broad technical fluency: capable of reviewing and guiding work a...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, SENIORITY_MISMATCH Evidence: \"This role requires breadth: strong experience across AV systems, including robotics and autonomy, is essential. If you also bring deep expertise in machine learning, that's a major plus.\" , \"Build and lead a self-suf...",
+      "oldDecidedAt": "2026-03-02T05:12:14.813Z",
+      "newDecidedAt": "2026-03-03T13:12:31.170Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/technical-program-manager-ai-studio-deepmind-5085",
+      "title": "Technical Program Manager, AI Studio",
+      "company": "DeepMind",
+      "location": "Mountain View, California, US",
+      "oldMatch": true,
+      "newMatch": false,
+      "changed": true,
+      "oldReasonCodes": [
+        "GOOD_AI_NATIVE_FIT"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: GOOD_AI_NATIVE_FIT Evidence: \"experimental \"vibe coding\" workflows—that enable developers to create apps in a few minutes and with little knowledge on our infrastructure.\" , \"Experience in \"vibe coding\" or interactive developer environments.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"We are looking for a high-impact Technical Program Manager...You have a proven track record of driving technical programs from the trenches.\" , \"You will be the glue between Marketing, Product, Legal and Engineering...\"",
+      "oldDecidedAt": "2026-03-02T05:12:18.089Z",
+      "newDecidedAt": "2026-03-03T13:12:46.249Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-consultant-data-science-process-automation-celonis-692",
+      "title": "Senior Consultant - Data Science & Process Automation",
+      "company": "Celonis",
+      "location": "Stockholm, SE",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Proficiency with SQL or other programming languages (Python, R, Matlab...)\" , \"Experience with Supply Chain processes\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Experience with Supply Chain processes\" and \"+5 years of working experience in IT-Consulting, Management Consulting, Process Improvement or a similar area.\"",
+      "oldDecidedAt": "2026-03-02T05:12:20.429Z",
+      "newDecidedAt": "2026-03-03T13:13:01.435Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-consultant-data-science-process-automation-celonis-7346",
+      "title": "Senior Consultant - Data Science & Process Automation",
+      "company": "Celonis",
+      "location": "Copenhagen, DK",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Proficiency with SQL or other programming languages (Python, R, Matlab...)\" , \"Experience with Supply Chain processes\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Experience with Supply Chain processes\" and \"+5 years of working experience in IT-Consulting, Management Consulting, Process Improvement or a similar area.\"",
+      "oldDecidedAt": "2026-03-02T05:12:22.750Z",
+      "newDecidedAt": "2026-03-03T13:13:30.458Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/recruiter-ai-ml-research-openai-2555",
+      "title": "Recruiter, AI/ML Research",
+      "company": "OpenAI",
+      "location": "San Francisco, CA, US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Significant experience recruiting within highly technical or specialized environments.\" and \"Experience recruiting within highly technical or specialized environments such as ML/AI, distributed systems, infrastructur...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Significant experience recruiting within highly technical or specialized environments.\" and \"Track record of leading complex, ambiguous technical searches from early talent mapping through close.\"",
+      "oldDecidedAt": "2026-03-02T05:12:25.404Z",
+      "newDecidedAt": "2026-03-03T13:13:47.050Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/ai-software-quality-lead-engineer-amd-3863",
+      "title": "AI Software Quality Lead Engineer",
+      "company": "AMD",
+      "location": "Nis, RS",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "SENIORITY_MISMATCH",
+        "MANUAL_CODING_REQUIRED",
+        "FUNCTIONAL_BACKGROUND_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Proficiency in Python, Bash, and C/C++ programming.\" , \"Hands-on experience on automated test framework development is a must.\"",
+      "newRationale": "Reason codes: SENIORITY_MISMATCH, MANUAL_CODING_REQUIRED, FUNCTIONAL_BACKGROUND_MISMATCH Evidence: \"You will be the lead engineer of a small team of software quality engineers, that you will navigate toward common goals.\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:02.756Z",
+      "newDecidedAt": "2026-03-03T13:14:03.280Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/cloud-data-engineer-lead-mutt-data-4768",
+      "title": "Cloud Data Engineer Lead",
+      "company": "Mutt Data",
+      "location": "AR",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Required Skills 💻 - Senior Data Engineering Foundations: Strong experience in Python and a deep mastery of SQL and Postgres .\" , \"Code Hygiene: A sharp sense of code hygiene, including code review, documentation, te...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Senior Data Engineering Foundations: Strong experience in Python and a deep mastery of SQL and Postgres .\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:06.184Z",
+      "newDecidedAt": "2026-03-03T13:14:31.151Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/ai-go-to-market-specialist-netomi-ai-9344",
+      "title": "AI Go-To-Market Specialist",
+      "company": "Netomi AI",
+      "location": "US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Experience selling AI-native or ML-powered products.\" and \"Translate complex AI capabilities into clear business outcomes.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"3-6+ years’ experience managing enterprise-level -GTM processes.\" , \"Experience selling AI-native or ML-powered products.\"",
+      "oldDecidedAt": "2026-03-02T05:13:11.685Z",
+      "newDecidedAt": "2026-03-03T13:14:46.733Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-ml-ai-software-engineer-playstation-1005",
+      "title": "Senior ML/AI Software Engineer",
+      "company": "PlayStation",
+      "location": "GB",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Coding Proficiency: Demonstrated experience with Java and Python.\" , \"Develop microservices for ML-driven applications using Python or Java, ensuring scalability and resilience.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Educational Background: Bachelor’s degree with 6+ years of experience in machine learning, backend engineering, or AI platform development.\" , \"Builds software only with AI assistance; cannot do independent manual co...",
+      "oldDecidedAt": "2026-03-02T05:13:14.308Z",
+      "newDecidedAt": "2026-03-03T13:15:02.541Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-ml-ai-software-engineer-playstation-6370",
+      "title": "Senior ML/AI Software Engineer",
+      "company": "PlayStation",
+      "location": "TELECOMMUTE",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Coding Proficiency: Demonstrated experience with Java and Python.\" , \"Develop microservices for ML-driven applications using Python or Java, ensuring scalability and resilience.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Bachelor’s degree with 6+ years of experience in machine learning, backend engineering, or AI platform development.\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:16.791Z",
+      "newDecidedAt": "2026-03-03T13:15:30.437Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/summernaut-program-ai-management-consulting-value-engineering-summer-intern-celonis-9626",
+      "title": "Summernaut Program - AI & Management Consulting (Value Engineering) Summer Intern",
+      "company": "Celonis",
+      "location": "US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Gain hands-on experience with Celonis technology, including SQL and PQL, to build basic analyses and reports.\" , \"Exposure to at least one of the following technologies: SQL, R, Microsoft Power BI, Tableau, Python, o...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"Value Engineers partner with sales and customers to create compelling solutions and prototypes...Gain hands-on experience with Celonis technology, including SQL and PQL, to build basic analyses and reports.\" , \"Build...",
+      "oldDecidedAt": "2026-03-02T05:13:20.106Z",
+      "newDecidedAt": "2026-03-03T13:15:48.171Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/ai-engineer-mutt-data-6515",
+      "title": "AI Engineer",
+      "company": "Mutt Data",
+      "location": "AR",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Strong technical foundation as an AI Engineer, Software Engineer, or similar profile.\" , \"Once this foundation is solid, the role will help evolve toward more advanced automation initiatives and code-first approaches.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"The role will help evolve toward more advanced automation initiatives and code-first approaches.\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:23.122Z",
+      "newDecidedAt": "2026-03-03T13:15:59.522Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/latam-risk-ai-manager-feedzai-6347",
+      "title": "LATAM Risk&AI Manager",
+      "company": "Feedzai",
+      "location": "São Paulo, BR",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "ADVANCED_DEGREE_REQUIRED",
+        "SENIORITY_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Hands-on experience with machine learning, data analysis , and scripting languages such as Python or R\" , \"Strong background in data science, fraud detection , or real-time decision systems\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, ADVANCED_DEGREE_REQUIRED, SENIORITY_MISMATCH Evidence: \"You Have and Know-How: MSc or PhD in Computer Science, Engineering, Applied Math, Physics, Statistics, or another technical/quantitative discipline\" , \"Lead a distributed team of Risk Consultants, Data Scientists, an...",
+      "oldDecidedAt": "2026-03-02T05:13:28.785Z",
+      "newDecidedAt": "2026-03-03T13:16:30.452Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-software-engineer-3-6-years-experience-in-python-net-core-c-angular-react-gen-ai-visa-528",
+      "title": "Senior Software Engineer (3 - 6 years' experience in Python + .NET Core / C# + Angular / React + Gen AI)",
+      "company": "Visa",
+      "location": "Bengaluru, IN",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "FUNCTIONAL_BACKGROUND_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Write secure, scalable, and maintainable code that adheres to Visa’s engineering standards and best practices.\" , \"Strong experience with backend development using Python, Microsoft .NET Core / C#\"",
+      "newRationale": "Reason codes: MANUAL_CODING_REQUIRED, FUNCTIONAL_BACKGROUND_MISMATCH Evidence: \"This role requires close collaboration with People team partners, multiple Visa IT teams, and third-party vendors.\" , \"Design, develop, document, and maintain full stack applications and enhancements to existing syst...",
+      "oldDecidedAt": "2026-03-02T05:13:33.770Z",
+      "newDecidedAt": "2026-03-03T13:16:42.691Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-machine-learning-engineer-multimodal-generative-ai-code-and-theory-1717",
+      "title": "Senior Machine Learning Engineer (Multimodal Generative AI)",
+      "company": "Code and Theory",
+      "location": "Bengaluru, Karnataka, IN",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "MISSING_REQUIRED_EXPERIENCE",
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Strong programming skills in Python with extensive experience in PyTorch and HuggingFace ecosystem (Transformers, Diffusers, Accelerate)\" , \"Deep practical knowledge of either computer vision or NLP\"",
+      "newRationale": "Reason codes: MISSING_REQUIRED_EXPERIENCE, FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"5+ years experience in machine learning engineering, with at least 1 year focussed on generative AI or multimodal systems\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:36.638Z",
+      "newDecidedAt": "2026-03-03T13:16:53.544Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-software-engineer-3-6-years-of-exp-in-java-python-gen-ai-visa-8415",
+      "title": "Senior Software Engineer (3 - 6 years of exp in Java / Python + Gen AI)",
+      "company": "Visa",
+      "location": "Bengaluru, IN",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "FUNCTIONAL_BACKGROUND_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Design, Code, document and implement new applications & as well as existing programs\" , \"Develop code that complies with design specifications and meets security and best practices. Coding must adhere to all standard...",
+      "newRationale": "Reason codes: MANUAL_CODING_REQUIRED, FUNCTIONAL_BACKGROUND_MISMATCH Evidence: \"Develop code that complies with design specifications and meets security and best practices. Coding must adhere to all standards for security, be easily maintainable and have high system performance.\" , \"As a Senior...",
+      "oldDecidedAt": "2026-03-02T05:13:39.896Z",
+      "newDecidedAt": "2026-03-03T13:17:10.379Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-engineer-crm-m-f-d-sixt-2588",
+      "title": "Senior Data Engineer CRM (m/f/d)",
+      "company": "SIXT",
+      "location": "Lisbon, PT",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Programming Fluency : Advanced proficiency in Python and SQL (required)\" , \"Engineering Excellence : Strong foundation in engineering best practices...testing, and operations.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"At least 3 years of professional experience as senior data engineer.\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:41.862Z",
+      "newDecidedAt": "2026-03-03T13:17:30.092Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-analyst-truecaller-5009",
+      "title": "Senior Data Analyst",
+      "company": "Truecaller",
+      "location": "Stockholm, SE",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "MISSING_REQUIRED_EXPERIENCE",
+        "FUNCTIONAL_BACKGROUND_MISMATCH"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Experience in using SQL to extract, transform and analyse data\" , \"Developing and maintaining key performance indicators (KPIs) for the team, ensuring their tracking, reliability, and reporting.\"",
+      "newRationale": "Reason codes: MISSING_REQUIRED_EXPERIENCE, FUNCTIONAL_BACKGROUND_MISMATCH Evidence: \"6+ years of experience in Data Analytics\" and \"Experience in mentoring, coaching, and evangelizing about data in product development\"",
+      "oldDecidedAt": "2026-03-02T05:13:44.382Z",
+      "newDecidedAt": "2026-03-03T13:17:44.212Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/ai-design-specialist-johannesburg-6-month-contract-canva-1803",
+      "title": "AI Design Specialist, Johannesburg (6-month contract)",
+      "company": "Canva",
+      "location": "Johannesburg, GP, ZA",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Basic familiarity with Python, prompt engineering, or dataset tooling\" & \"You’re familiar with generative AI tools and understand how training data and annotation influence model behavior\" - implies coding/tooling sk...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"You’ll translate nuanced design critique into structured, actionable feedback for ML engineers and research scientists\" , \"Builds software only with AI assistance; cannot do independent manual coding without AI.\"",
+      "oldDecidedAt": "2026-03-02T05:13:46.879Z",
+      "newDecidedAt": "2026-03-03T13:17:56.723Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/small-business-ownership-india-freelance-ai-trainer-project-invisible-5347",
+      "title": "Small Business Ownership (India) – Freelance AI Trainer Project",
+      "company": "Invisible",
+      "location": "IN",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: DOMAIN_MISMATCH Evidence: \"direct experience owning or co-owning a small business is strongly preferred.\" , \"We’re looking for current or former owners and co-owners...\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Direct experience owning or co-owning a small business is strongly preferred.\" , \"Experience managing operations, finances, marketing, staffing, or growth strategy is highly relevant.\"",
+      "oldDecidedAt": "2026-03-02T05:13:51.388Z",
+      "newDecidedAt": "2026-03-03T13:18:08.360Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/small-business-ownership-us-freelance-ai-trainer-project-invisible-8195",
+      "title": "Small Business Ownership (US) – Freelance AI Trainer Project",
+      "company": "Invisible",
+      "location": "US",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: DOMAIN_MISMATCH Evidence: \"direct experience owning or co-owning a small business is strongly preferred\" and \"We’re looking for current or former owners and co-owners...\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Direct experience owning or co-owning a small business is strongly preferred.\" , \"Experience managing operations, finances, marketing, staffing, or growth strategy is highly relevant.\"",
+      "oldDecidedAt": "2026-03-02T05:13:55.431Z",
+      "newDecidedAt": "2026-03-03T13:18:30.642Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/machine-learning-engineer-faculty-2456",
+      "title": "Machine Learning Engineer",
+      "company": "Faculty",
+      "location": "London",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"You possess strong Python skills and solid experience in software engineering best practices.\" , \"Building and deploying production-grade ML software, tools, and infrastructure.\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"You understand the full machine learning lifecycle and have experience operationalising models...\" , \"Building and deploying production-grade ML software, tools, and infrastructure.\"",
+      "oldDecidedAt": "2026-03-02T05:13:58.843Z",
+      "newDecidedAt": "2026-03-03T13:18:43.329Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/staff-data-engineer-visa-1913",
+      "title": "Staff Data Engineer",
+      "company": "Visa",
+      "location": "Bengaluru, IN",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "SENIORITY_MISMATCH",
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Strong programming skills in Python, Scala, or Java , with a focus on building reliabe production systems.\" , \"Experience working in fraud detection, risk scoring, payments, or other high-integrity, compliance-heavy...",
+      "newRationale": "Reason codes: SENIORITY_MISMATCH, FUNCTIONAL_BACKGROUND_MISMATCH, MANUAL_CODING_REQUIRED Evidence: \"8+ yrs. work experience with a bachelor’s degree or 6+ years of work experience with a Master's or Advanced Degree\" , \"You must be a hands-on expert able to navigate both data engineering and data science disciplines...",
+      "oldDecidedAt": "2026-03-02T05:14:05.897Z",
+      "newDecidedAt": "2026-03-03T13:19:01.909Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/intern-value-engineering-ai-management-consulting-value-engineering-french-market-celonis-8601",
+      "title": "Intern Value Engineering AI & Management Consulting (Value Engineering French Market)",
+      "company": "Celonis",
+      "location": "Paris, FR",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Knowledge in SQL or related database query languages\" , \"Analyze data from our customers to increase transparency in business processes\"",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, MISSING_REQUIRED_EXPERIENCE Evidence: \"Experience in consulting and highly interested in Data Analytics\" and \"Student in the field of Technology & Management, Industrial/Business Engineering, Business Informatics, Business Administration, Computer Science...",
+      "oldDecidedAt": "2026-03-02T05:14:08.068Z",
+      "newDecidedAt": "2026-03-03T13:19:16.514Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-research-scientist-mongodb-4870",
+      "title": "Senior Research Scientist",
+      "company": "MongoDB",
+      "location": "Sydney, NSW, AU",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED",
+        "DOMAIN_MISMATCH"
+      ],
+      "newReasonCodes": [
+        "FUNCTIONAL_BACKGROUND_MISMATCH",
+        "ADVANCED_DEGREE_REQUIRED",
+        "MISSING_REQUIRED_CREDENTIAL"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED, DOMAIN_MISMATCH Evidence: \"Ph.D. in Computer Science, Computer Engineering, or a closely related field with a specialization in Machine Learning\" , \"Proven track record of impactful research publications in top-tier Machine Learning conference...",
+      "newRationale": "Reason codes: FUNCTIONAL_BACKGROUND_MISMATCH, ADVANCED_DEGREE_REQUIRED, MISSING_REQUIRED_CREDENTIAL Evidence: \"Qualifications Ph.D. in Computer Science, Computer Engineering, or a closely related field with a specialization in Machine Learning\" , \"Proven track record of impactful research publications in top-tier Machine Lear...",
+      "oldDecidedAt": "2026-03-02T05:14:10.628Z",
+      "newDecidedAt": "2026-03-03T13:19:30.527Z"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-scientist-grabmaps-grab-1155",
+      "title": "Senior Data Scientist (GrabMaps)",
+      "company": "Grab",
+      "location": "Singapore, SG",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "ADVANCED_DEGREE_REQUIRED",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Proficiency in deep learning frameworks (TensorFlow, PyTorch) and deployment tools (ONNX, tf-serving, TorchServe, Triton Inference Server etc.) - Solid software engineering skills in Python/Spark\"",
+      "newRationale": "Reason codes: ADVANCED_DEGREE_REQUIRED, MISSING_REQUIRED_EXPERIENCE Evidence: \"Ph.D. in Computer Science, Electrical/Computer Engineering, Operations Research, or a related field, or Masters with at least 2 year of equivalent practical experience applying advanced machine learning methods to re...",
+      "oldDecidedAt": "2026-03-02T05:14:12.882Z",
+      "newDecidedAt": "2026-03-03T13:19:46.503Z"
+    }
+  ]
+}

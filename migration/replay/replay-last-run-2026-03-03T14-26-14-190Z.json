@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-03-03T14:26:14.190Z",
+  "options": {
+    "stateFilePath": "state.json",
+    "gapMinutes": 20,
+    "limit": 1,
+    "fetchConcurrency": 2,
+    "model": "gemma-3-27b-it",
+    "descriptionCharCap": 20000,
+    "geminiTimeoutMs": 60000
+  },
+  "sourceWindow": {
+    "startedAt": "2026-03-02T04:32:49.543Z",
+    "finishedAt": "2026-03-02T05:14:12.882Z",
+    "windowDurationMinutes": 41.39,
+    "selectedJobs": 398
+  },
+  "summary": {
+    "selectedJobs": 1,
+    "fetchedJobs": 1,
+    "fetchFailures": 0,
+    "classifiedJobs": 1,
+    "changedVerdicts": 0,
+    "changedToYes": 0,
+    "changedToNo": 0,
+    "oldYes": 0,
+    "oldNo": 1,
+    "newYes": 0,
+    "newNo": 1
+  },
+  "fetchFailures": [],
+  "comparisons": [
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-scientist-grabmaps-grab-1155",
+      "title": "Senior Data Scientist (GrabMaps)",
+      "company": "Grab",
+      "location": "Singapore, SG",
+      "oldMatch": false,
+      "newMatch": false,
+      "changed": false,
+      "oldReasonCodes": [
+        "MANUAL_CODING_REQUIRED"
+      ],
+      "newReasonCodes": [
+        "ADVANCED_DEGREE_REQUIRED",
+        "MISSING_REQUIRED_EXPERIENCE"
+      ],
+      "oldRationale": "Reason codes: MANUAL_CODING_REQUIRED Evidence: \"Proficiency in deep learning frameworks (TensorFlow, PyTorch) and deployment tools (ONNX, tf-serving, TorchServe, Triton Inference Server etc.) - Solid software engineering skills in Python/Spark\"",
+      "newRationale": "Reason codes: ADVANCED_DEGREE_REQUIRED, MISSING_REQUIRED_EXPERIENCE Evidence: \"Ph.D. in Computer Science, Electrical/Computer Engineering, Operations Research, or a related field, or Masters with at least 2 year of equivalent practical experience applying advanced machine learning methods to re...",
+      "oldDecidedAt": "2026-03-02T05:14:12.882Z",
+      "newDecidedAt": "2026-03-03T14:26:14.189Z"
+    }
+  ]
+}

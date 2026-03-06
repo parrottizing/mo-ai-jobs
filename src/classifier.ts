@@ -27,6 +27,8 @@ export type ClassifyOptions = {
   model?: string;
   timeoutMs?: number;
   descriptionCharCap?: number;
+  continueOnError?: boolean;
+  onJobError?: (context: { job: ClassifierJob; error: unknown }) => void;
   rateLimit?: {
     requestsPerMinute?: number;
     tokensPerMinute?: number;
@@ -56,11 +58,18 @@ export async function classifyJobs(
   const limiter = createRateLimiter(options.rateLimit);
 
   for (const job of jobs) {
-    const promptInput = preparePromptInput(job, options.descriptionCharCap);
-    const prompt = buildPrompt(job, promptInput);
-    const promptTokens = estimateTokens(prompt);
-    await limiter.consume(promptTokens);
-    results.push(await classifyJobWithPrompt(job, promptInput, prompt, promptTokens, options));
+    try {
+      const promptInput = preparePromptInput(job, options.descriptionCharCap);
+      const prompt = buildPrompt(job, promptInput);
+      const promptTokens = estimateTokens(prompt);
+      await limiter.consume(promptTokens);
+      results.push(await classifyJobWithPrompt(job, promptInput, prompt, promptTokens, options));
+    } catch (error) {
+      if (!options.continueOnError) {
+        throw error;
+      }
+      options.onJobError?.({ job, error });
+    }
   }
 
   return results;
@@ -257,8 +266,11 @@ async function callGemini(prompt: string, model: string, options: ClassifyOption
 
       if (!response.ok) {
         const errorBody = await safeReadBody(response);
-        if (response.status === 429 && attempt < maxRetries) {
-          const retryDelayMs = parseRetryDelayMs(errorBody) ?? 30_000;
+        if (attempt < maxRetries && isRetryableGeminiStatus(response.status)) {
+          const retryDelayMs =
+            parseRetryAfterHeaderMs(response.headers.get("retry-after")) ??
+            parseRetryDelayMs(errorBody) ??
+            getApiRetryDelayMs(attempt, response.status);
           await sleep(retryDelayMs);
           continue;
         }
@@ -272,6 +284,12 @@ async function callGemini(prompt: string, model: string, options: ClassifyOption
       }
 
       return text;
+    } catch (error) {
+      if (attempt < maxRetries && isRetryableGeminiError(error)) {
+        await sleep(getTransientRetryDelayMs(attempt));
+        continue;
+      }
+      throw error;
     } finally {
       clearTimeout(timeout);
     }
@@ -365,6 +383,66 @@ function parseRetryDelayMs(errorBody: string): number | null {
     return null;
   }
   return Math.max(0, Math.ceil(seconds * 1000));
+}
+
+function parseRetryAfterHeaderMs(retryAfter: string | null): number | null {
+  if (!retryAfter) {
+    return null;
+  }
+
+  const numericSeconds = Number(retryAfter.trim());
+  if (Number.isFinite(numericSeconds)) {
+    return Math.max(0, Math.ceil(numericSeconds * 1000));
+  }
+
+  const timestamp = Date.parse(retryAfter);
+  if (!Number.isFinite(timestamp)) {
+    return null;
+  }
+
+  return Math.max(0, timestamp - Date.now());
+}
+
+function isRetryableGeminiStatus(status: number): boolean {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
+function getApiRetryDelayMs(attempt: number, status: number): number {
+  if (status === 429 || status === 503) {
+    const baseMs = 10_000;
+    const delayMs = baseMs * 2 ** attempt;
+    return Math.min(120_000, delayMs);
+  }
+
+  const baseMs = 2_000;
+  const delayMs = baseMs * 2 ** attempt;
+  return Math.min(30_000, delayMs);
+}
+
+function getTransientRetryDelayMs(attempt: number): number {
+  const baseMs = 1_000;
+  const delayMs = baseMs * 2 ** attempt;
+  return Math.min(15_000, delayMs);
+}
+
+function isRetryableGeminiError(error: unknown): boolean {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return true;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  if (message.includes("abort") || message.includes("timed out") || message.includes("timeout")) {
+    return true;
+  }
+  if (message.includes("fetch failed") || message.includes("network")) {
+    return true;
+  }
+
+  return false;
 }
 
 async function safeReadBody(response: Response): Promise<string> {

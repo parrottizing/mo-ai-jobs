@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-03-04T06:26:42.868Z",
+  "options": {
+    "stateFilePath": "state.json",
+    "gapMinutes": 20,
+    "limit": 3,
+    "fetchConcurrency": 4,
+    "fetchTimeoutMs": 30000,
+    "model": "definitely-invalid-model",
+    "descriptionCharCap": 20000,
+    "geminiTimeoutMs": 60000
+  },
+  "sourceWindow": {
+    "startedAt": "2026-03-02T04:32:49.543Z",
+    "finishedAt": "2026-03-02T05:14:12.882Z",
+    "windowDurationMinutes": 41.39,
+    "selectedJobs": 398
+  },
+  "summary": {
+    "selectedJobs": 3,
+    "fetchedJobs": 3,
+    "fetchFailures": 0,
+    "classificationFailures": 3,
+    "classifiedJobs": 0,
+    "changedVerdicts": 0,
+    "changedToYes": 0,
+    "changedToNo": 0,
+    "oldYes": 0,
+    "oldNo": 0,
+    "newYes": 0,
+    "newNo": 0
+  },
+  "fetchFailures": [],
+  "classificationFailures": [
+    {
+      "jobId": "https://www.moaijobs.com/job/intern-value-engineering-ai-management-consulting-value-engineering-french-market-celonis-8601",
+      "decidedAt": "2026-03-02T05:14:08.068Z",
+      "error": "Gemini API error: 404 Not Found {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/definitely-invalid-model is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-research-scientist-mongodb-4870",
+      "decidedAt": "2026-03-02T05:14:10.628Z",
+      "error": "Gemini API error: 404 Not Found {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/definitely-invalid-model is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+    },
+    {
+      "jobId": "https://www.moaijobs.com/job/senior-data-scientist-grabmaps-grab-1155",
+      "decidedAt": "2026-03-02T05:14:12.882Z",
+      "error": "Gemini API error: 404 Not Found {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/definitely-invalid-model is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+    }
+  ],
+  "comparisons": []
+}
