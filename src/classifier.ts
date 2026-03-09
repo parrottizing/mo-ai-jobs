@@ -58,10 +58,11 @@ export async function classifyJobs(
   const limiter = createRateLimiter(options.rateLimit);
 
   for (const job of jobs) {
+    const promptInput = preparePromptInput(job, options.descriptionCharCap);
+    const prompt = buildPrompt(job, promptInput);
+    const promptTokens = estimateTokens(prompt);
+
     try {
-      const promptInput = preparePromptInput(job, options.descriptionCharCap);
-      const prompt = buildPrompt(job, promptInput);
-      const promptTokens = estimateTokens(prompt);
       await limiter.consume(promptTokens);
       results.push(await classifyJobWithPrompt(job, promptInput, prompt, promptTokens, options));
     } catch (error) {
@@ -69,6 +70,7 @@ export async function classifyJobs(
         throw error;
       }
       options.onJobError?.({ job, error });
+      results.push(buildFallbackNoMatchResult(job, promptInput, promptTokens, options.model, error));
     }
   }
 
@@ -149,7 +151,8 @@ async function classifyJobWithPrompt(
   const parsed = parseClassification(responseText);
 
   if (!parsed) {
-    throw new Error("Failed to parse classification response from Gemini API.");
+    const preview = responseText.replace(/\s+/g, " ").slice(0, 220);
+    throw new Error(`Failed to parse classification response from Gemini API. Response preview: ${preview}`);
   }
 
   return {
@@ -464,13 +467,12 @@ function extractGeminiText(data: GeminiResponse): string | null {
 }
 
 function parseClassification(text: string): { match: boolean; rationale: string } | null {
-  const normalized = text.trim();
-  const verdictMatch = /^\s*(YES|NO)\b/i.exec(normalized);
-  if (!verdictMatch) {
+  const normalized = normalizeModelOutput(text);
+  const match = extractVerdict(normalized);
+  if (match === null) {
     return null;
   }
 
-  const match = verdictMatch[1].toUpperCase() === "YES";
   const reasonCodes = parseReasonCodes(normalized);
   const evidence = parseEvidence(normalized);
 
@@ -491,6 +493,98 @@ function parseClassification(text: string): { match: boolean; rationale: string 
     .join(" ");
 
   return { match, rationale };
+}
+
+function normalizeModelOutput(text: string): string {
+  return text
+    .replace(/\r/g, "")
+    .replace(/```(?:[\w-]+)?/g, "")
+    .trim();
+}
+
+function extractVerdict(text: string): boolean | null {
+  const explicitLineOne = findTaggedLineValue(text, "Line 1");
+  const explicitLineOneVerdict = parseVerdictToken(explicitLineOne);
+  if (explicitLineOneVerdict !== null) {
+    return explicitLineOneVerdict;
+  }
+
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  for (const line of lines.slice(0, 10)) {
+    const verdict = parseVerdictToken(line);
+    if (verdict !== null) {
+      return verdict;
+    }
+  }
+
+  return null;
+}
+
+function parseVerdictToken(input: string | null | undefined): boolean | null {
+  if (!input) {
+    return null;
+  }
+
+  const normalized = input
+    .trim()
+    .replace(/^[-*#>\s]+/, "")
+    .replace(/^\d+[.)]\s*/, "");
+
+  const directMatch = /^(YES|NO)\b/i.exec(normalized);
+  if (directMatch) {
+    return directMatch[1].toUpperCase() === "YES";
+  }
+
+  const taggedMatch = /^(?:LINE\s*1|VERDICT|ANSWER|FINAL\s+ANSWER)\s*[:\-]\s*(YES|NO)\b/i.exec(normalized);
+  if (taggedMatch) {
+    return taggedMatch[1].toUpperCase() === "YES";
+  }
+
+  return null;
+}
+
+function buildFallbackNoMatchResult(
+  job: ClassifierJob,
+  promptInput: PromptInput,
+  promptTokens: number,
+  model: string | undefined,
+  error: unknown,
+): JobMatchResult {
+  const reason = formatError(error).replace(/\s+/g, " ").trim();
+  const evidence = clipReason(reason, 220);
+
+  return {
+    job,
+    match: false,
+    rationale: `Reason codes: INSUFFICIENT_EVIDENCE Evidence: ${evidence}`,
+    rawResponse: `[classifier_error] ${reason}`,
+    decision: {
+      model: model ?? DEFAULT_MODEL,
+      decidedAt: new Date().toISOString(),
+      promptTokens,
+      descriptionChars: promptInput.descriptionChars,
+      descriptionCharsUsed: promptInput.descriptionCharsUsed,
+      descriptionWasClipped: promptInput.descriptionWasClipped,
+    },
+  };
+}
+
+function clipReason(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return String(error);
 }
 
 function parseReasonCodes(text: string): string[] {
@@ -555,7 +649,7 @@ function parseEvidence(text: string): string | null {
 
 function findTaggedLineValue(text: string, tag: string): string | null {
   const escapedTag = escapeRegExp(tag);
-  const regex = new RegExp(`^\\s*${escapedTag}\\s*:\\s*(.+)$`, "im");
+  const regex = new RegExp(`^\\s*(?:LINE\\s*\\d+\\s*:\\s*)?${escapedTag}\\s*:\\s*(.+)$`, "im");
   const match = regex.exec(text);
   return match?.[1]?.trim() ?? null;
 }

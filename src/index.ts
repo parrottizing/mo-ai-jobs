@@ -102,6 +102,10 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   const matchResults = await classifyJobs(newJobs, {
     apiKey: config.googleApiKey,
     descriptionCharCap: config.classifierDescriptionCharCap,
+    continueOnError: true,
+    onJobError: ({ job, error }) => {
+      log(`Classifier fallback to NO for ${job.id}: ${formatError(error)}`);
+    },
     rateLimit: {
       requestsPerMinute: config.geminiRequestsPerMinute,
       tokensPerMinute: config.geminiTokensPerMinute,
