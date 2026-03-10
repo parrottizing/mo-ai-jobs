@@ -13,6 +13,7 @@ const DEFAULT_STATE_FILE_PATH = path.join(DEFAULT_PHASE8_DIR, "state.phase8.test
 const DEFAULT_BASELINE_METRICS_PATH = "migration/phase0/baseline-metrics.json";
 
 const MOCK_RSS_FEED_URL = "https://mock.moaijobs.local/ai-jobs.rss";
+const MOCK_RSS_FEED_PAGE_2_URL = `${MOCK_RSS_FEED_URL}?paged=2`;
 const MATCHED_JOB_DETAIL_URL = "https://mock.moaijobs.local/jobs/senior-ai-automation-engineer";
 const UNMATCHED_JOB_DETAIL_URL = "https://mock.moaijobs.local/jobs/staff-backend-engineer";
 const MATCHED_JOB_APPLY_URL = "https://careers.example.com/jobs/senior-ai-automation-engineer";
@@ -22,6 +23,7 @@ const TEST_ENV_VALUES: Record<string, string> = {
   TELEGRAM_BOT_TOKEN: "phase8-test-telegram-bot-token",
   TELEGRAM_CHAT_ID: "phase8-test-chat-id",
   RSS_FEED_URL: MOCK_RSS_FEED_URL,
+  RSS_MAX_PAGES_PER_RUN: "2",
   DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED: "false",
   GEMINI_TOKENS_PER_MINUTE: "1000000",
   GEMINI_TOKEN_SAFETY_MARGIN: "1",
@@ -257,6 +259,16 @@ function createMockFetcher(
       observation.counters.feed += 1;
       return new Response(rssXml, {
         status: 200,
+        headers: {
+          "Content-Type": "application/rss+xml",
+        },
+      });
+    }
+
+    if (url === MOCK_RSS_FEED_PAGE_2_URL) {
+      observation.counters.feed += 1;
+      return new Response("", {
+        status: 404,
         headers: {
           "Content-Type": "application/rss+xml",
         },

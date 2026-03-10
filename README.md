@@ -43,6 +43,7 @@ TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 RSS_FEED_URL=https://www.moaijobs.com/ai-jobs.rss
 RSS_MAX_ITEMS_PER_RUN=100
+RSS_MAX_PAGES_PER_RUN=10
 RSS_FETCH_MAX_ATTEMPTS=3
 RSS_FETCH_INITIAL_BACKOFF_MS=1000
 RSS_FETCH_MAX_BACKOFF_MS=15000
@@ -52,6 +53,13 @@ GEMINI_TOKENS_PER_MINUTE=15000
 GEMINI_TOKEN_SAFETY_MARGIN=1
 GEMINI_MIN_DELAY_MS=0
 DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED=false
+```
+
+For VibeCodeCareers, set:
+
+```bash
+RSS_FEED_URL=https://vibecodecareers.com/jobs/feed/
+RSS_MAX_PAGES_PER_RUN=10
 ```
 
 ## Install
@@ -80,10 +88,22 @@ Run once:
 node dist/index.js
 ```
 
+Run once with a custom state file:
+
+```bash
+node dist/index.js --state-file state.vibecodecareers.json
+```
+
 Run every 24 hours:
 
 ```bash
 node dist/index.js --schedule daily
+```
+
+Run every 24 hours with a custom state file:
+
+```bash
+node dist/index.js --schedule daily --state-file state.vibecodecareers.json
 ```
 
 Phase 0 baseline artifacts:

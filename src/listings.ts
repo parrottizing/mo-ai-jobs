@@ -19,6 +19,7 @@ type CollectOptions = {
   latestSeenPubDate?: string | null;
   seenIds?: string[];
   maxItemsPerRun?: number;
+  rssMaxPagesPerRun?: number;
   rssFetchMaxAttempts?: number;
   rssFetchInitialBackoffMs?: number;
   rssFetchMaxBackoffMs?: number;
@@ -27,6 +28,7 @@ type CollectOptions = {
 };
 
 const DEFAULT_MAX_ITEMS_PER_RUN = 100;
+const DEFAULT_RSS_MAX_PAGES_PER_RUN = 10;
 const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
 const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
 const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
@@ -37,6 +39,7 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
     latestSeenPubDate = null,
     seenIds = [],
     maxItemsPerRun = DEFAULT_MAX_ITEMS_PER_RUN,
+    rssMaxPagesPerRun = DEFAULT_RSS_MAX_PAGES_PER_RUN,
     rssFetchMaxAttempts = DEFAULT_RSS_FETCH_MAX_ATTEMPTS,
     rssFetchInitialBackoffMs = DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS,
     rssFetchMaxBackoffMs = DEFAULT_RSS_FETCH_MAX_BACKOFF_MS,
@@ -44,7 +47,7 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
     fetcher = fetch,
   } = options;
 
-  const response = await fetchRssWithRetry(rssFeedUrl, fetcher, {
+  const fetchRetryOptions = {
     maxAttempts: normalizePositiveInteger(rssFetchMaxAttempts, DEFAULT_RSS_FETCH_MAX_ATTEMPTS),
     initialBackoffMs: normalizePositiveInteger(
       rssFetchInitialBackoffMs,
@@ -52,10 +55,35 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
     ),
     maxBackoffMs: normalizePositiveInteger(rssFetchMaxBackoffMs, DEFAULT_RSS_FETCH_MAX_BACKOFF_MS),
     onRetry: onRssRetry,
-  });
+  };
+  const maxPages = normalizePositiveInteger(rssMaxPagesPerRun, DEFAULT_RSS_MAX_PAGES_PER_RUN);
+  const collectedFeedItems: FeedJob[] = [];
 
-  const xml = await response.text();
-  const feedItems = parseFeedItems(xml, rssFeedUrl);
+  for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
+    const pageUrl = buildPagedFeedUrl(rssFeedUrl, pageNumber);
+    const response = await fetchRssWithRetry(pageUrl, fetcher, {
+      ...fetchRetryOptions,
+      allowNotFound: pageNumber > 1,
+    });
+
+    if (!response) {
+      break;
+    }
+
+    const xml = await response.text();
+    const pageItems = parseFeedItems(xml, rssFeedUrl);
+    if (pageItems.length === 0) {
+      break;
+    }
+
+    collectedFeedItems.push(...pageItems);
+
+    if (allItemsOlderThanCursor(pageItems, latestSeenPubDate)) {
+      break;
+    }
+  }
+
+  const feedItems = sortNewestFirst(collectedFeedItems);
   const newFeedJobs = selectNewFeedItems(feedItems, {
     latestSeenPubDate,
     seenIds,
@@ -73,20 +101,21 @@ type FetchRetryOptions = {
   initialBackoffMs: number;
   maxBackoffMs: number;
   onRetry?: (event: RssRetryEvent) => void;
+  allowNotFound?: boolean;
 };
 
 async function fetchRssWithRetry(
-  rssFeedUrl: string,
+  feedUrl: string,
   fetcher: Fetcher,
   options: FetchRetryOptions,
-): Promise<Response> {
+): Promise<Response | null> {
   const maxAttempts = Math.max(1, options.maxAttempts);
   const initialBackoffMs = Math.max(1, options.initialBackoffMs);
   const maxBackoffMs = Math.max(initialBackoffMs, options.maxBackoffMs);
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const response = await fetcher(rssFeedUrl, {
+      const response = await fetcher(feedUrl, {
         headers: {
           "User-Agent": "vibe-coder-job-agent/0.1",
           Accept: "application/rss+xml, application/xml, text/xml, */*",
@@ -97,11 +126,15 @@ async function fetchRssWithRetry(
         return response;
       }
 
-      throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: ${response.status} ${response.statusText}`);
+      if (options.allowNotFound && response.status === 404) {
+        return null;
+      }
+
+      throw new Error(`Failed to fetch RSS feed ${feedUrl}: ${response.status} ${response.statusText}`);
     } catch (error) {
       if (attempt >= maxAttempts) {
         throw new Error(
-          `Failed to fetch RSS feed ${rssFeedUrl} after ${maxAttempts} attempt(s): ${formatError(error)}`,
+          `Failed to fetch RSS feed ${feedUrl} after ${maxAttempts} attempt(s): ${formatError(error)}`,
         );
       }
 
@@ -116,7 +149,43 @@ async function fetchRssWithRetry(
     }
   }
 
-  throw new Error(`Failed to fetch RSS feed ${rssFeedUrl}: exhausted retry attempts.`);
+  throw new Error(`Failed to fetch RSS feed ${feedUrl}: exhausted retry attempts.`);
+}
+
+function buildPagedFeedUrl(baseUrl: string, pageNumber: number): string {
+  if (pageNumber <= 1) {
+    return baseUrl;
+  }
+
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set("paged", String(pageNumber));
+    return url.toString();
+  } catch {
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    return `${baseUrl}${separator}paged=${pageNumber}`;
+  }
+}
+
+function allItemsOlderThanCursor(feedItems: FeedJob[], latestSeenPubDate: string | null): boolean {
+  const cursorTimestamp = toTimestamp(latestSeenPubDate);
+  if (cursorTimestamp === null) {
+    return false;
+  }
+
+  let hasDatedItems = false;
+  for (const item of feedItems) {
+    const itemTimestamp = toTimestamp(item.pubDate);
+    if (itemTimestamp === null) {
+      continue;
+    }
+    hasDatedItems = true;
+    if (itemTimestamp >= cursorTimestamp) {
+      return false;
+    }
+  }
+
+  return hasDatedItems;
 }
 
 export function parseFeedItems(xml: string, feedUrl: string): FeedJob[] {

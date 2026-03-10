@@ -49,8 +49,8 @@ export type RunOnceOptions = {
   fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 };
 
-export async function runOnce(): Promise<void> {
-  await runOnceWithSummary();
+export async function runOnce(options: RunOnceOptions = {}): Promise<void> {
+  await runOnceWithSummary(options);
 }
 
 export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<RunSummary> {
@@ -66,6 +66,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
     latestSeenPubDate: state.latestSeenPubDate,
     seenIds: state.seenIds,
     maxItemsPerRun: config.maxFeedItemsPerRun,
+    rssMaxPagesPerRun: config.rssMaxPagesPerRun,
     rssFetchMaxAttempts: config.rssFetchMaxAttempts,
     rssFetchInitialBackoffMs: config.rssFetchInitialBackoffMs,
     rssFetchMaxBackoffMs: config.rssFetchMaxBackoffMs,
@@ -158,7 +159,7 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
   return summary;
 }
 
-export async function runDaily(): Promise<void> {
+export async function runDaily(options: RunOnceOptions = {}): Promise<void> {
   let running = false;
 
   const runGuarded = async () => {
@@ -169,7 +170,7 @@ export async function runDaily(): Promise<void> {
 
     running = true;
     try {
-      await runOnce();
+      await runOnce(options);
     } catch (error) {
       console.error(error);
       log("Run failed. State not updated.");
@@ -186,8 +187,12 @@ export async function runDaily(): Promise<void> {
 
 export async function bootstrap(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+  const runOptions: RunOnceOptions = {
+    stateFilePath: args.stateFilePath,
+  };
+
   if (args.schedule === "daily") {
-    await runDaily();
+    await runDaily(runOptions);
     return;
   }
 
@@ -195,7 +200,7 @@ export async function bootstrap(): Promise<void> {
     throw new Error(`Unsupported schedule: ${args.schedule}`);
   }
 
-  await runOnce();
+  await runOnce(runOptions);
 }
 
 if (require.main === module) {
@@ -209,8 +214,9 @@ function log(message: string): void {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
-function parseArgs(argv: string[]): { schedule?: string } {
+function parseArgs(argv: string[]): { schedule?: string; stateFilePath?: string } {
   let schedule: string | undefined;
+  let stateFilePath: string | undefined;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -222,10 +228,21 @@ function parseArgs(argv: string[]): { schedule?: string } {
 
     if (arg.startsWith("--schedule=")) {
       schedule = arg.slice("--schedule=".length);
+      continue;
+    }
+
+    if (arg === "--state-file" && argv[i + 1]) {
+      stateFilePath = argv[i + 1];
+      i += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--state-file=")) {
+      stateFilePath = arg.slice("--state-file=".length);
     }
   }
 
-  return { schedule };
+  return { schedule, stateFilePath };
 }
 
 function buildRunSummary(

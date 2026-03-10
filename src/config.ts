@@ -7,6 +7,7 @@ export type AppConfig = {
   stateFilePath: string;
   rssFeedUrl: string;
   maxFeedItemsPerRun: number;
+  rssMaxPagesPerRun: number;
   rssFetchMaxAttempts: number;
   rssFetchInitialBackoffMs: number;
   rssFetchMaxBackoffMs: number;
@@ -21,6 +22,7 @@ export type AppConfig = {
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
 const DEFAULT_RSS_FEED_URL = "https://www.moaijobs.com/ai-jobs.rss";
 const DEFAULT_MAX_FEED_ITEMS_PER_RUN = 100;
+const DEFAULT_RSS_MAX_PAGES_PER_RUN = 10;
 const DEFAULT_RSS_FETCH_MAX_ATTEMPTS = 3;
 const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
 const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
@@ -51,6 +53,7 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     stateFilePath,
     rssFeedUrl: process.env.RSS_FEED_URL?.trim() || DEFAULT_RSS_FEED_URL,
     maxFeedItemsPerRun: readPositiveInteger("RSS_MAX_ITEMS_PER_RUN", DEFAULT_MAX_FEED_ITEMS_PER_RUN),
+    rssMaxPagesPerRun: readPositiveInteger("RSS_MAX_PAGES_PER_RUN", DEFAULT_RSS_MAX_PAGES_PER_RUN),
     rssFetchMaxAttempts: readPositiveInteger("RSS_FETCH_MAX_ATTEMPTS", DEFAULT_RSS_FETCH_MAX_ATTEMPTS),
     rssFetchInitialBackoffMs,
     rssFetchMaxBackoffMs,
