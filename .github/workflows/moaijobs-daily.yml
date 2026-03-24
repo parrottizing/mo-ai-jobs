@@ -1,0 +1,66 @@
+name: Daily MoAIJobs
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub Actions cron uses UTC. 01:00 UTC = 09:00 Asia/Manila.
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: moaijobs-daily
+  cancel-in-progress: false
+
+jobs:
+  run-daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      STATE_FILE: state.github-actions.json
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      CLASSIFIER_DESCRIPTION_CHAR_CAP: "20000"
+      GEMINI_REQUESTS_PER_MINUTE: "24"
+      GEMINI_TOKENS_PER_MINUTE: "12000"
+      GEMINI_TOKEN_SAFETY_MARGIN: "1"
+      GEMINI_MIN_DELAY_MS: "300"
+      RSS_MAX_ITEMS_PER_RUN: "5000"
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npx tsc
+
+      - name: Run Job Agent
+        run: node dist/index.js --state-file "$STATE_FILE"
+
+      - name: Commit Updated State
+        run: |
+          if git diff --quiet -- "$STATE_FILE"; then
+            echo "No state changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$STATE_FILE"
+          git commit -m "chore: update job agent state"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
