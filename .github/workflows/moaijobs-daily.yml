@@ -1,4 +1,4 @@
-name: Daily MoAIJobs
+name: Daily Job Feeds
 
 on:
   workflow_dispatch:
@@ -16,9 +16,10 @@ concurrency:
 jobs:
   run-daily:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
-      STATE_FILE: state.github-actions.json
+      MOAI_STATE_FILE: state.github-actions.json
+      VIBE_STATE_FILE: state.vibecodecareers.json
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -49,18 +50,23 @@ jobs:
       - name: Build
         run: npx tsc
 
-      - name: Run Job Agent
-        run: node dist/index.js --state-file "$STATE_FILE"
+      - name: Run MoAIJobs Agent
+        run: node dist/index.js --state-file "$MOAI_STATE_FILE"
+
+      - name: Run VibeCodeCareers Agent
+        env:
+          RSS_FEED_URL: https://vibecodecareers.com/jobs/feed/
+        run: node dist/index.js --state-file "$VIBE_STATE_FILE"
 
       - name: Commit Updated State
         run: |
-          if git diff --quiet -- "$STATE_FILE"; then
+          if git diff --quiet -- "$MOAI_STATE_FILE" "$VIBE_STATE_FILE"; then
             echo "No state changes to commit."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$STATE_FILE"
+          git add "$MOAI_STATE_FILE" "$VIBE_STATE_FILE"
           git commit -m "chore: update job agent state"
           git push origin "HEAD:${GITHUB_REF_NAME}"
