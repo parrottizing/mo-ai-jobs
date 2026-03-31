@@ -57,7 +57,11 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
     onRetry: onRssRetry,
   };
   const maxPages = normalizePositiveInteger(rssMaxPagesPerRun, DEFAULT_RSS_MAX_PAGES_PER_RUN);
-  const collectedFeedItems: FeedJob[] = [];
+  const cursorTimestamp = toTimestamp(latestSeenPubDate);
+  const historicalSeen = new Set(seenIds.map((id) => id.trim()).filter((id) => id.length > 0));
+  const seenThisRun = new Set<string>();
+  const newFeedJobs: FeedJob[] = [];
+  let feedItemsTotal = 0;
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const pageUrl = buildPagedFeedUrl(rssFeedUrl, pageNumber);
@@ -75,22 +79,39 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
       break;
     }
 
-    collectedFeedItems.push(...pageItems);
+    feedItemsTotal += pageItems.length;
 
-    if (allItemsOlderThanCursor(pageItems, latestSeenPubDate)) {
-      break;
+    for (const item of pageItems) {
+      if (newFeedJobs.length >= maxItemsPerRun) {
+        return {
+          feedItemsTotal,
+          newFeedJobs,
+        };
+      }
+
+      if (seenThisRun.has(item.id)) {
+        continue;
+      }
+      seenThisRun.add(item.id);
+
+      const itemTimestamp = toTimestamp(item.pubDate);
+      if (cursorTimestamp !== null && itemTimestamp !== null && itemTimestamp < cursorTimestamp) {
+        return {
+          feedItemsTotal,
+          newFeedJobs,
+        };
+      }
+
+      if (historicalSeen.has(item.id)) {
+        continue;
+      }
+
+      newFeedJobs.push(item);
     }
   }
 
-  const feedItems = sortNewestFirst(collectedFeedItems);
-  const newFeedJobs = selectNewFeedItems(feedItems, {
-    latestSeenPubDate,
-    seenIds,
-    maxItemsPerRun,
-  });
-
   return {
-    feedItemsTotal: feedItems.length,
+    feedItemsTotal,
     newFeedJobs,
   };
 }
@@ -166,27 +187,6 @@ function buildPagedFeedUrl(baseUrl: string, pageNumber: number): string {
   }
 }
 
-function allItemsOlderThanCursor(feedItems: FeedJob[], latestSeenPubDate: string | null): boolean {
-  const cursorTimestamp = toTimestamp(latestSeenPubDate);
-  if (cursorTimestamp === null) {
-    return false;
-  }
-
-  let hasDatedItems = false;
-  for (const item of feedItems) {
-    const itemTimestamp = toTimestamp(item.pubDate);
-    if (itemTimestamp === null) {
-      continue;
-    }
-    hasDatedItems = true;
-    if (itemTimestamp >= cursorTimestamp) {
-      return false;
-    }
-  }
-
-  return hasDatedItems;
-}
-
 export function parseFeedItems(xml: string, feedUrl: string): FeedJob[] {
   const itemBlocks = extractItemBlocks(xml);
   const parsedItems: FeedJob[] = [];
@@ -199,43 +199,6 @@ export function parseFeedItems(xml: string, feedUrl: string): FeedJob[] {
   }
 
   return sortNewestFirst(parsedItems);
-}
-
-type SelectionOptions = {
-  latestSeenPubDate: string | null;
-  seenIds: string[];
-  maxItemsPerRun: number;
-};
-
-function selectNewFeedItems(feedItems: FeedJob[], options: SelectionOptions): FeedJob[] {
-  const cursorTimestamp = toTimestamp(options.latestSeenPubDate);
-  const historicalSeen = new Set(options.seenIds.map((id) => id.trim()).filter((id) => id.length > 0));
-  const seenThisRun = new Set<string>();
-  const selected: FeedJob[] = [];
-
-  for (const item of feedItems) {
-    if (selected.length >= options.maxItemsPerRun) {
-      break;
-    }
-
-    if (seenThisRun.has(item.id)) {
-      continue;
-    }
-    seenThisRun.add(item.id);
-
-    const itemTimestamp = toTimestamp(item.pubDate);
-    if (cursorTimestamp !== null && itemTimestamp !== null && itemTimestamp < cursorTimestamp) {
-      break;
-    }
-
-    if (historicalSeen.has(item.id)) {
-      continue;
-    }
-
-    selected.push(item);
-  }
-
-  return selected;
 }
 
 function extractItemBlocks(xml: string): string[] {

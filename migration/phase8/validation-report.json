@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T15:36:39.470Z",
+  "generatedAt": "2026-03-31T14:46:44.918Z",
   "artifacts": {
     "reportPath": "migration/phase8/validation-report.json",
     "stateFilePath": "migration/phase8/state.phase8.test.json",
@@ -10,7 +10,7 @@
       "command": "npm run typecheck",
       "success": true,
       "exitCode": 0,
-      "durationMs": 984,
+      "durationMs": 1021,
       "stdout": "\n> vibe-coder-job-agent@0.1.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
     },
@@ -18,7 +18,7 @@
       "command": "npx tsc",
       "success": true,
       "exitCode": 0,
-      "durationMs": 1130,
+      "durationMs": 1230,
       "stdout": "",
       "stderr": ""
     }
@@ -26,9 +26,9 @@
   "runResults": {
     "firstRun": {
       "summary": {
-        "startedAt": "2026-03-30T15:36:36.957Z",
-        "finishedAt": "2026-03-30T15:36:39.466Z",
-        "runtimeMs": 2509,
+        "startedAt": "2026-03-31T14:46:42.404Z",
+        "finishedAt": "2026-03-31T14:46:44.915Z",
+        "runtimeMs": 2511,
         "newJobsCount": 2,
         "matchesCount": 1,
         "telegramSentCount": 1,
@@ -63,8 +63,8 @@
     },
     "secondRun": {
       "summary": {
-        "startedAt": "2026-03-30T15:36:39.468Z",
-        "finishedAt": "2026-03-30T15:36:39.469Z",
+        "startedAt": "2026-03-31T14:46:44.916Z",
+        "finishedAt": "2026-03-31T14:46:44.917Z",
         "runtimeMs": 1,
         "newJobsCount": 0,
         "matchesCount": 0,
@@ -83,8 +83,8 @@
       },
       "observation": {
         "counters": {
-          "total": 2,
-          "feed": 2,
+          "total": 1,
+          "feed": 1,
           "detailTotal": 0,
           "detailMatched": 0,
           "detailUnmatched": 0,
@@ -101,11 +101,12 @@
     "matched_jobs_include_external_apply_links": false,
     "unmatched_jobs_do_not_fetch_details": true,
     "rss_body_read_retry_recovers_from_connection_reset": true,
+    "rss_stops_fetching_when_max_items_reached": true,
     "runtime_vs_baseline": {
       "status": "fail",
       "baseline": 1073,
-      "current": 2509,
-      "delta": 1436,
+      "current": 2511,
+      "delta": 1438,
       "message": "Current runtime (ms) is higher than baseline."
     },
     "request_count_vs_baseline": {

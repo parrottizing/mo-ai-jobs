@@ -106,6 +106,7 @@ type Phase8Report = {
     matched_jobs_include_external_apply_links: boolean;
     unmatched_jobs_do_not_fetch_details: boolean;
     rss_body_read_retry_recovers_from_connection_reset: boolean;
+    rss_stops_fetching_when_max_items_reached: boolean;
     runtime_vs_baseline: ComparisonResult;
     request_count_vs_baseline: ComparisonResult;
   };
@@ -129,6 +130,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
   const observation = createObservationState();
   const fetcher = createMockFetcher(observation);
   const rssBodyReadRetryRecovered = await verifyRssBodyReadRetry();
+  const rssStopsAtMaxItems = await verifyRssStopsAtMaxItems();
 
   const originalEnv = captureEnv(Object.keys(TEST_ENV_VALUES));
   applyTestEnv(TEST_ENV_VALUES);
@@ -184,6 +186,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
       firstRunObservation.counters.detailUnmatched === 0 &&
       secondRunObservation.counters.detailUnmatched === 0,
     rss_body_read_retry_recovers_from_connection_reset: rssBodyReadRetryRecovered,
+    rss_stops_fetching_when_max_items_reached: rssStopsAtMaxItems,
     runtime_vs_baseline: runtimeComparison,
     request_count_vs_baseline: requestCountComparison,
   };
@@ -194,6 +197,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
     checks.matched_jobs_include_external_apply_links &&
     checks.unmatched_jobs_do_not_fetch_details &&
     checks.rss_body_read_retry_recovers_from_connection_reset &&
+    checks.rss_stops_fetching_when_max_items_reached &&
     checks.runtime_vs_baseline.status !== "fail" &&
     checks.request_count_vs_baseline.status === "pass";
 
@@ -296,6 +300,46 @@ async function verifyRssBodyReadRetry(): Promise<boolean> {
   });
 
   return feedPageOneAttempts === 2 && result.newFeedJobs.length === 2;
+}
+
+async function verifyRssStopsAtMaxItems(): Promise<boolean> {
+  let pageOneRequests = 0;
+  let pageTwoRequested = false;
+
+  const fetcher = async (input: RequestInfo | URL) => {
+    const url = resolveRequestUrl(input);
+
+    if (url === MOCK_RSS_FEED_URL) {
+      pageOneRequests += 1;
+      return new Response(buildMockRssFeedXml(), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/rss+xml",
+        },
+      });
+    }
+
+    if (url === MOCK_RSS_FEED_PAGE_2_URL) {
+      pageTwoRequested = true;
+      return new Response(buildMockRssFeedXml(), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/rss+xml",
+        },
+      });
+    }
+
+    throw new Error(`Unexpected network request during max-items validation: ${url}`);
+  };
+
+  const result = await collectFeedJobs({
+    rssFeedUrl: MOCK_RSS_FEED_URL,
+    maxItemsPerRun: 1,
+    rssMaxPagesPerRun: 2,
+    fetcher,
+  });
+
+  return pageOneRequests === 1 && !pageTwoRequested && result.feedItemsTotal === 2 && result.newFeedJobs.length === 1;
 }
 
 function createMockFetcher(
