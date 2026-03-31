@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { collectFeedJobs } from "./listings";
 import { runOnceWithSummary, type RunSummary } from "./index";
 
 const execFileAsync = promisify(execFile);
@@ -104,6 +105,7 @@ type Phase8Report = {
     no_duplicate_alerts_on_unchanged_feed: boolean;
     matched_jobs_include_external_apply_links: boolean;
     unmatched_jobs_do_not_fetch_details: boolean;
+    rss_body_read_retry_recovers_from_connection_reset: boolean;
     runtime_vs_baseline: ComparisonResult;
     request_count_vs_baseline: ComparisonResult;
   };
@@ -126,6 +128,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
 
   const observation = createObservationState();
   const fetcher = createMockFetcher(observation);
+  const rssBodyReadRetryRecovered = await verifyRssBodyReadRetry();
 
   const originalEnv = captureEnv(Object.keys(TEST_ENV_VALUES));
   applyTestEnv(TEST_ENV_VALUES);
@@ -180,6 +183,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
     unmatched_jobs_do_not_fetch_details:
       firstRunObservation.counters.detailUnmatched === 0 &&
       secondRunObservation.counters.detailUnmatched === 0,
+    rss_body_read_retry_recovers_from_connection_reset: rssBodyReadRetryRecovered,
     runtime_vs_baseline: runtimeComparison,
     request_count_vs_baseline: requestCountComparison,
   };
@@ -189,6 +193,7 @@ export async function runPhase8(options: Phase8Options = {}): Promise<{ reportPa
     checks.no_duplicate_alerts_on_unchanged_feed &&
     checks.matched_jobs_include_external_apply_links &&
     checks.unmatched_jobs_do_not_fetch_details &&
+    checks.rss_body_read_retry_recovers_from_connection_reset &&
     checks.runtime_vs_baseline.status !== "fail" &&
     checks.request_count_vs_baseline.status === "pass";
 
@@ -238,6 +243,59 @@ function createObservationState(): ObservationState {
     },
     telegramMessages: [],
   };
+}
+
+async function verifyRssBodyReadRetry(): Promise<boolean> {
+  const rssXml = buildMockRssFeedXml();
+  let feedPageOneAttempts = 0;
+
+  const fetcher = async (input: RequestInfo | URL) => {
+    const url = resolveRequestUrl(input);
+
+    if (url === MOCK_RSS_FEED_URL) {
+      feedPageOneAttempts += 1;
+      if (feedPageOneAttempts === 1) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          text: async () => {
+            throw new TypeError("terminated");
+          },
+        } as unknown as Response;
+      }
+
+      return new Response(rssXml, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/rss+xml",
+        },
+      });
+    }
+
+    if (url === MOCK_RSS_FEED_PAGE_2_URL) {
+      return new Response("", {
+        status: 404,
+        headers: {
+          "Content-Type": "application/rss+xml",
+        },
+      });
+    }
+
+    throw new Error(`Unexpected network request during RSS retry validation: ${url}`);
+  };
+
+  const result = await collectFeedJobs({
+    rssFeedUrl: MOCK_RSS_FEED_URL,
+    maxItemsPerRun: 10,
+    rssMaxPagesPerRun: 2,
+    rssFetchMaxAttempts: 2,
+    rssFetchInitialBackoffMs: 1,
+    rssFetchMaxBackoffMs: 1,
+    fetcher,
+  });
+
+  return feedPageOneAttempts === 2 && result.newFeedJobs.length === 2;
 }
 
 function createMockFetcher(

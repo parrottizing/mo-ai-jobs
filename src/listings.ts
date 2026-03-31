@@ -61,16 +61,15 @@ export async function collectFeedJobs(options: CollectOptions): Promise<CollectF
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const pageUrl = buildPagedFeedUrl(rssFeedUrl, pageNumber);
-    const response = await fetchRssWithRetry(pageUrl, fetcher, {
+    const xml = await fetchRssWithRetry(pageUrl, fetcher, {
       ...fetchRetryOptions,
       allowNotFound: pageNumber > 1,
     });
 
-    if (!response) {
+    if (xml === null) {
       break;
     }
 
-    const xml = await response.text();
     const pageItems = parseFeedItems(xml, rssFeedUrl);
     if (pageItems.length === 0) {
       break;
@@ -108,7 +107,7 @@ async function fetchRssWithRetry(
   feedUrl: string,
   fetcher: Fetcher,
   options: FetchRetryOptions,
-): Promise<Response | null> {
+): Promise<string | null> {
   const maxAttempts = Math.max(1, options.maxAttempts);
   const initialBackoffMs = Math.max(1, options.initialBackoffMs);
   const maxBackoffMs = Math.max(initialBackoffMs, options.maxBackoffMs);
@@ -123,7 +122,7 @@ async function fetchRssWithRetry(
       });
 
       if (response.ok) {
-        return response;
+        return await response.text();
       }
 
       if (options.allowNotFound && response.status === 404) {

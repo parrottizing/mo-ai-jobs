@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-20T11:10:25.783Z",
+  "generatedAt": "2026-03-30T15:36:39.470Z",
   "artifacts": {
     "reportPath": "migration/phase8/validation-report.json",
     "stateFilePath": "migration/phase8/state.phase8.test.json",
@@ -10,7 +10,7 @@
       "command": "npm run typecheck",
       "success": true,
       "exitCode": 0,
-      "durationMs": 621,
+      "durationMs": 984,
       "stdout": "\n> vibe-coder-job-agent@0.1.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
     },
@@ -18,7 +18,7 @@
       "command": "npx tsc",
       "success": true,
       "exitCode": 0,
-      "durationMs": 852,
+      "durationMs": 1130,
       "stdout": "",
       "stderr": ""
     }
@@ -26,9 +26,9 @@
   "runResults": {
     "firstRun": {
       "summary": {
-        "startedAt": "2026-02-20T11:10:25.742Z",
-        "finishedAt": "2026-02-20T11:10:25.781Z",
-        "runtimeMs": 39,
+        "startedAt": "2026-03-30T15:36:36.957Z",
+        "finishedAt": "2026-03-30T15:36:39.466Z",
+        "runtimeMs": 2509,
         "newJobsCount": 2,
         "matchesCount": 1,
         "telegramSentCount": 1,
@@ -48,8 +48,8 @@
       },
       "observation": {
         "counters": {
-          "total": 5,
-          "feed": 1,
+          "total": 6,
+          "feed": 2,
           "detailTotal": 1,
           "detailMatched": 1,
           "detailUnmatched": 0,
@@ -57,15 +57,15 @@
           "telegram": 1
         },
         "telegramMessages": [
-          "Vibe-coder match found:\nTitle: Senior AI Automation Engineer\nCompany: Mock Labs\nLocation: Remote\nWhy it matched: Qualified based on AI-native profile.\nDetails: https://mock.moaijobs.local/jobs/senior-ai-automation-engineer\nApply: https://careers.example.com/jobs/senior-ai-automation-engineer"
+          "<b>Title:</b> <i>Senior AI Automation Engineer</i>\n<b>Company:</b> <i>Mock Labs</i>\n<b>Location:</b> <i>Remote</i>\n<a href=\"https://mock.moaijobs.local/jobs/senior-ai-automation-engineer\">Details</a>\n<a href=\"https://careers.example.com/jobs/senior-ai-automation-engineer\">Apply</a>"
         ]
       }
     },
     "secondRun": {
       "summary": {
-        "startedAt": "2026-02-20T11:10:25.782Z",
-        "finishedAt": "2026-02-20T11:10:25.782Z",
-        "runtimeMs": 0,
+        "startedAt": "2026-03-30T15:36:39.468Z",
+        "finishedAt": "2026-03-30T15:36:39.469Z",
+        "runtimeMs": 1,
         "newJobsCount": 0,
         "matchesCount": 0,
         "telegramSentCount": 0,
@@ -83,8 +83,8 @@
       },
       "observation": {
         "counters": {
-          "total": 1,
-          "feed": 1,
+          "total": 2,
+          "feed": 2,
           "detailTotal": 0,
           "detailMatched": 0,
           "detailUnmatched": 0,
@@ -98,19 +98,20 @@
   "checks": {
     "run_with_safe_test_credentials": true,
     "no_duplicate_alerts_on_unchanged_feed": true,
-    "matched_jobs_include_external_apply_links": true,
+    "matched_jobs_include_external_apply_links": false,
     "unmatched_jobs_do_not_fetch_details": true,
+    "rss_body_read_retry_recovers_from_connection_reset": true,
     "runtime_vs_baseline": {
-      "status": "pass",
+      "status": "fail",
       "baseline": 1073,
-      "current": 39,
-      "delta": -1034,
-      "message": "Current runtime (ms) is less than or equal to baseline."
+      "current": 2509,
+      "delta": 1436,
+      "message": "Current runtime (ms) is higher than baseline."
     },
     "request_count_vs_baseline": {
       "status": "not_available",
       "baseline": null,
-      "current": 5,
+      "current": 6,
       "delta": null,
       "message": "No baseline request count found in migration baseline artifacts."
     }
