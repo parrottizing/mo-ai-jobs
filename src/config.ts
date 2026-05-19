@@ -17,6 +17,7 @@ export type AppConfig = {
   geminiTokensPerMinute?: number;
   geminiTokenSafetyMargin?: number;
   geminiMinDelayMs?: number;
+  geminiModel: string;
 };
 
 const REQUIRED_KEYS = ["GOOGLE_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] as const;
@@ -28,6 +29,7 @@ const DEFAULT_RSS_FETCH_INITIAL_BACKOFF_MS = 1_000;
 const DEFAULT_RSS_FETCH_MAX_BACKOFF_MS = 15_000;
 const DEFAULT_CLASSIFIER_DESCRIPTION_CHAR_CAP = 4_000;
 const DEFAULT_DETAIL_ENRICHMENT_HEADLESS_FALLBACK_ENABLED = false;
+const DEFAULT_GEMINI_MODEL = "gemma-4-26b-a4b-it";
 
 export function loadConfig(stateFilePath = "state.json"): AppConfig {
   dotenv.config();
@@ -69,6 +71,7 @@ export function loadConfig(stateFilePath = "state.json"): AppConfig {
     geminiTokensPerMinute: readNumber("GEMINI_TOKENS_PER_MINUTE"),
     geminiTokenSafetyMargin: readNumber("GEMINI_TOKEN_SAFETY_MARGIN"),
     geminiMinDelayMs: readNumber("GEMINI_MIN_DELAY_MS"),
+    geminiModel: process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
   };
 }
 
