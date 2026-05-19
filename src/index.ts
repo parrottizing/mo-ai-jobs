@@ -102,8 +102,12 @@ export async function runOnceWithSummary(options: RunOnceOptions = {}): Promise<
 
   const matchResults = await classifyJobs(newJobs, {
     apiKey: config.googleApiKey,
+    model: config.geminiModel,
     descriptionCharCap: config.classifierDescriptionCharCap,
     continueOnError: true,
+    onJobComplete: ({ index, total, result }) => {
+      log(`${index}/${total} ${result.match ? "YES" : "NO"}`);
+    },
     onJobError: ({ job, error }) => {
       log(`Classifier fallback to NO for ${job.id}: ${formatError(error)}`);
     },

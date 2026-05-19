@@ -29,6 +29,12 @@ export type ClassifyOptions = {
   descriptionCharCap?: number;
   continueOnError?: boolean;
   onJobError?: (context: { job: ClassifierJob; error: unknown }) => void;
+  onJobComplete?: (context: {
+    job: ClassifierJob;
+    index: number;
+    total: number;
+    result: JobMatchResult;
+  }) => void;
   rateLimit?: {
     requestsPerMinute?: number;
     tokensPerMinute?: number;
@@ -38,8 +44,8 @@ export type ClassifyOptions = {
   fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 };
 
-const DEFAULT_MODEL = "gemma-3-27b-it";
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_MODEL = "gemma-4-26b-a4b-it";
+const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_DESCRIPTION_CHAR_CAP = 4_000;
 
 type PromptInput = {
@@ -56,21 +62,36 @@ export async function classifyJobs(
 ): Promise<JobMatchResult[]> {
   const results: JobMatchResult[] = [];
   const limiter = createRateLimiter(options.rateLimit);
+  const total = jobs.length;
 
-  for (const job of jobs) {
+  for (const [index, job] of jobs.entries()) {
     const promptInput = preparePromptInput(job, options.descriptionCharCap);
     const prompt = buildPrompt(job, promptInput);
     const promptTokens = estimateTokens(prompt);
 
     try {
       await limiter.consume(promptTokens);
-      results.push(await classifyJobWithPrompt(job, promptInput, prompt, promptTokens, options));
+      const result = await classifyJobWithPrompt(job, promptInput, prompt, promptTokens, options);
+      results.push(result);
+      options.onJobComplete?.({
+        job,
+        index: index + 1,
+        total,
+        result,
+      });
     } catch (error) {
       if (!options.continueOnError) {
         throw error;
       }
       options.onJobError?.({ job, error });
-      results.push(buildFallbackNoMatchResult(job, promptInput, promptTokens, options.model, error));
+      const result = buildFallbackNoMatchResult(job, promptInput, promptTokens, options.model, error);
+      results.push(result);
+      options.onJobComplete?.({
+        job,
+        index: index + 1,
+        total,
+        result,
+      });
     }
   }
 
